@@ -9,12 +9,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
-        body { background:#000; color:#fff; font-family:sans-serif; margin:0; overflow:hidden; }
+        body { background:#000; color:#fff; font-family:sans-serif; margin:0; overflow-x:hidden; }
         .hidden-el { display:none !important; }
         .lock-screen { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; flex-direction:column; padding:20px; background: radial-gradient(circle, #051911 0%, #000000 100%); overflow-y: auto; }
         .input-box { background:#111; border:1px solid #333; padding:14px; width:100%; margin-bottom:10px; border-radius:10px; color:#fff; outline:none; }
         .input-box:focus { border-color: #10b981; }
-        .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; transition: 0.3s; }
+        .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; transition: 0.3s; cursor: pointer; }
+        .btn-login:active { transform: scale(0.95); }
         .logo-img { width: 100px; height: 100px; object-fit: cover; margin: 0 auto 20px; border-radius: 50%; border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
         .warning-box { background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 255, 0, 0.3); padding: 12px; border-radius: 10px; margin-top: 20px; text-align: left; }
     </style>
@@ -30,31 +31,56 @@
         <input id="user-input" placeholder="Username" class="input-box">
         <input id="pass-input" type="password" placeholder="Password" class="input-box">
 
-        <button onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20 uppercase">LOGIN SYSTEM</button>
+        <button onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20 w-full uppercase">LOGIN SYSTEM</button>
         <p id="error-msg" class="text-red-500 mt-3 text-sm font-medium"></p>
         
         <div class="warning-box">
             <p class="text-yellow-500 font-bold text-xs mb-1">⚠️ PERINGATAN:</p>
-            <p class="text-gray-300 text-[10px] leading-relaxed">Gunakan Fungsi MOD Mengikut Keperluan. Resiko tanggung sendiri.</p>
+            <p class="text-gray-300 text-[10px] leading-relaxed">
+                MOD dan FakeGps Hanya Alat bantu. Gunakan Fungsi MOD Mengikut Keperluan.<br>
+                <span class="text-red-500 font-bold underline">!Fungsi PILIH JOB DAN PILIH JENIS BAYARAN, BERESIKO DI SUSPEND!</span>
+            </p>
         </div>
+
+        <a href="https://t.me/ZONEMASTA" target="_blank" class="block mt-6 text-xs text-gray-500 underline">Belum ada akaun? Hubungi Admin</a>
     </div>
 
-    <div id="blocked-msg" class="hidden-el text-center p-6 border border-red-900 bg-red-950/20 rounded-2xl max-w-sm">
-        <img src="https://i.ibb.co/60PtNmBD/download.jpg" class="logo-img border-red-500">
-        <h2 class="text-red-500 text-xl font-bold mb-2">AKSES DITOLAK</h2>
-        <p id="block-reason" class="text-gray-300 text-sm mb-4"></p>
-        <button onclick="location.reload()" class="mt-6 text-gray-500 underline text-xs">Cuba Lagi</button>
+    <div id="blocked-msg" class="hidden-el text-center p-6 w-full max-w-md">
+        <div class="mb-6">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 mb-4">
+                <span class="text-red-500 text-2xl">⚠️</span>
+            </div>
+            <h2 class="text-red-500 text-xl font-bold uppercase tracking-widest">Akses Disekat</h2>
+            <p id="block-reason" class="text-gray-400 text-[10px] mt-2 leading-relaxed uppercase"></p>
+        </div>
+
+        <p class="text-emerald-500 text-[9px] mb-4 font-bold tracking-tighter uppercase">
+            QR KE ADMIN JIKA MASIH BERMINAT BERLANGGANAN DAN MENERUSKAN SERVICE APLIKASI KAMI
+        </p>
+
+        <div class="bg-white p-2 rounded-xl inline-block shadow-lg shadow-emerald-500/10 mb-4">
+            <img src="https://i.ibb.co/cXRFyvyw/67312.jpg" alt="QR Payment" class="w-64 h-auto rounded-lg">
+        </div>
+
+        <p class="text-gray-500 text-[8px] mb-6 uppercase tracking-widest">
+            Sila hantar resit kepada admin selepas pembayaran
+        </p>
+
+        <button onclick="location.reload()" class="text-gray-400 underline text-[10px] hover:text-white transition-all uppercase">
+            Cuba Log Masuk Semula
+        </button>
     </div>
 </div>
 
 <div id="main-content" class="hidden-el lock-screen">
     <div class="animate-pulse flex flex-col items-center">
         <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-emerald-500 font-medium tracking-widest text-sm">MEMBINA SESI SELAMAT...</p>
+        <p class="text-emerald-500 font-medium tracking-widest text-sm uppercase">Membina Sesi Selamat...</p>
     </div>
 </div>
 
 <script>
+// ================= CONFIG FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyCrSMWPiFLhP8SzWMvZG0WcuwbIkLKjrws",
   authDomain: "zonemasta-panel.firebaseapp.com",
@@ -67,23 +93,29 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// ================= DEVICE ID =================
 function getDeviceId(){
     return btoa(navigator.userAgent + screen.width).substring(0,16);
 }
 
+// ================= LOGIN LOGIC =================
 async function handleLogin(){
-    const user = document.getElementById('user-input').value.trim();
-    const pass = document.getElementById('pass-input').value.trim();
+    const userInput = document.getElementById('user-input').value.trim();
+    const passInput = document.getElementById('pass-input').value.trim();
     const error = document.getElementById('error-msg');
 
-    if(!user || !pass) { error.innerText = "Isi maklumat!"; return; }
-    error.innerText = "Menyemak...";
+    if(!userInput || !passInput){
+        error.innerText = "Isi semua maklumat!";
+        return;
+    }
 
     try {
-        // PERBAIKAN: Cari terus dalam koleksi 'users'
+        error.innerText = "Menyemak...";
+        
+        // Cari user dalam koleksi 'users'
         const snapshot = await db.collection("users")
-                                 .where("username", "==", user)
-                                 .where("password", "==", pass)
+                                 .where("username", "==", userInput)
+                                 .where("password", "==", passInput)
                                  .get();
 
         if(snapshot.empty){
@@ -91,46 +123,68 @@ async function handleLogin(){
             return;
         }
 
-        const doc = snapshot.docs[0];
-        const data = doc.data();
+        const userDoc = snapshot.docs[0];
+        const userData = userDoc.data();
+        const uid = userDoc.id;
         const myId = getDeviceId();
+        const now = new Date();
 
-        // Cek Status
-        if(data.status === "disekat" || data.status === "REVOKED"){
-            showBlock("Akses anda disekat oleh Admin.");
+        // 1. Cek Status (Disekat/Expired)
+        if(userData.status === "disekat" || userData.status === "REVOKED" || userData.status === "BLOCKED"){
+            showBlock("Akses akaun anda telah disekat sementara kerana masa aktif telah tamat");
             return;
         }
 
-        // Cek Expiry
-        if(data.expiryDate && new Date() > new Date(data.expiryDate)){
-            showBlock("Tempoh langganan tamat.");
+        // 2. Cek Tarikh Luput
+        if(userData.expiryDate){
+            const expDate = new Date(userData.expiryDate);
+            if(now > expDate){
+                showBlock("Akses akaun anda telah disekat sementara kerana masa aktif telah tamat");
+                return;
+            }
+        }
+
+        // 3. Check Device Lock
+        if(userData.deviceId && userData.deviceId !== myId){
+            showBlock("Peranti tidak sah! ID ini telah dikunci pada peranti lain.");
             return;
         }
 
-        // Cek Device
-        if(data.deviceId && data.deviceId !== myId){
-            showBlock("ID dikunci pada peranti lain!");
-            return;
+        // 4. Lock Device jika kali pertama login
+        if(!userData.deviceId){
+            await db.collection("users").doc(uid).update({ 
+                deviceId: myId,
+                lastActive: firebase.firestore.FieldValue.serverTimestamp()
+            });
         }
-
-        if(!data.deviceId) await db.collection("users").doc(doc.id).update({ deviceId: myId });
 
         showApp();
+
     } catch(e) {
-        error.innerText = "Ralat: " + e.message;
+        console.error(e);
+        error.innerText = "Ralat sambungan database!";
     }
 }
 
+// ================= UI CONTROL =================
 function showBlock(msg){
     document.getElementById("login-form").classList.add("hidden-el");
-    document.getElementById("blocked-msg").classList.remove("hidden-el");
+    document.getElementById("main-content").classList.add("hidden-el");
+    
+    const blockEl = document.getElementById("blocked-msg");
+    blockEl.classList.remove("hidden-el");
+    blockEl.classList.add("flex", "flex-col", "items-center", "justify-center");
+    
     document.getElementById("block-reason").innerText = msg;
 }
 
 function showApp(){
     document.getElementById("security-layer").classList.add("hidden-el");
     document.getElementById("main-content").classList.remove("hidden-el");
-    setTimeout(() => { window.location.href = "https://www.grab.com/my/driver/"; }, 2000);
+    
+    setTimeout(()=>{
+        window.location.href = "https://www.grab.com/my/driver/";
+    }, 2000);
 }
 </script>
 </body>
