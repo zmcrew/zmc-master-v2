@@ -12,11 +12,17 @@
         body { background:#000; color:#fff; font-family:sans-serif; margin:0; overflow:hidden; }
         .hidden-el { display:none !important; }
         .lock-screen { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; flex-direction:column; padding:20px; background: radial-gradient(circle, #051911 0%, #000000 100%); overflow-y: auto; }
-        .input-box { background:#111; border:1px solid #333; padding:14px; width:100%; margin-bottom:10px; border-radius:10px; color:#fff; outline:none; }
-        .input-box:focus { border-color: #10b981; }
-        .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; transition: 0.3s; }
+        .input-box { background:#111; border:1px solid #333; padding:14px; width:100%; margin-bottom:10px; border-radius:10px; color:#fff; outline:none; transition: 0.3s; }
+        .input-box:focus { border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+        .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; transition: 0.3s; cursor: pointer; }
+        .btn-login:disabled { background: #065f46; cursor: not-allowed; opacity: 0.7; }
         .logo-img { width: 100px; height: 100px; object-fit: cover; margin: 0 auto 20px; border-radius: 50%; border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
-        .warning-box { background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 255, 0, 0.3); padding: 12px; border-radius: 10px; margin-top: 20px; text-align: left; }
+        .warning-box { background: rgba(255, 0, 0, 0.05); border: 1px solid rgba(255, 255, 0, 0.2); padding: 12px; border-radius: 10px; margin-top: 20px; text-align: left; }
+        
+        /* Layout Pembayaran QR */
+        .qr-container { display:flex; flex-direction:column; align-items:center; text-align:center; padding: 20px; color: #fff; width: 100%; }
+        .qr-img { border-radius: 12px; border: 4px solid #fff; width: 280px; height: auto; margin: 15px 0; }
+        .btn-tele { background: #0088cc; color: #fff; padding: 12px 20px; border-radius: 8px; font-weight: bold; margin: 10px 0; display: inline-block; }
     </style>
 </head>
 <body>
@@ -27,30 +33,40 @@
         <h1 class="text-2xl font-bold text-emerald-500 mb-2">ZM CREW SYSTEM</h1>
         <p class="text-gray-400 mb-6 text-sm">Sila masukkan akses anda</p>
 
-        <input id="user-input" placeholder="Username" class="input-box">
+        <input id="user-input" placeholder="Username" class="input-box" autocomplete="off">
         <input id="pass-input" type="password" placeholder="Password" class="input-box">
 
-        <button onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20 uppercase">LOGIN SYSTEM</button>
-        <p id="error-msg" class="text-red-500 mt-3 text-sm font-medium"></p>
+        <button id="login-btn" onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20 uppercase">LOGIN SYSTEM</button>
+        <p id="error-msg" class="text-red-500 mt-3 text-sm font-medium h-5"></p>
         
         <div class="warning-box">
             <p class="text-yellow-500 font-bold text-xs mb-1">⚠️ PERINGATAN:</p>
-            <p class="text-gray-300 text-[10px] leading-relaxed">Gunakan Fungsi MOD Mengikut Keperluan. Resiko tanggung sendiri.</p>
+            <p class="text-gray-300 text-[10px] leading-relaxed">Gunakan Fungsi MOD mengikut keperluan. Segala risiko adalah tanggungjawab sendiri.</p>
         </div>
     </div>
 
-    <div id="blocked-msg" class="hidden-el text-center p-6 border border-red-900 bg-red-950/20 rounded-2xl max-w-sm">
-        <img src="https://i.ibb.co/60PtNmBD/download.jpg" class="logo-img border-red-500">
-        <h2 class="text-red-500 text-xl font-bold mb-2">AKSES DITOLAK</h2>
-        <p id="block-reason" class="text-gray-300 text-sm mb-4"></p>
-        <button onclick="location.reload()" class="mt-6 text-gray-500 underline text-xs">Cuba Lagi</button>
+    <div id="blocked-msg" class="hidden-el qr-container">
+        <div class="bg-red-600 p-2 rounded-full mb-4">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        </div>
+        <h2 class="text-red-500 text-xl font-bold uppercase">Akses Disekat</h2>
+        <p id="block-reason" class="text-gray-300 text-xs my-2 px-6"></p>
+        
+        <p class="text-emerald-400 text-[10px] font-bold mt-4">SILA KE ADMIN JIKA INGIN BERLANGGANAN / MEMPERBAHARUI SERVIS</p>
+        
+        <a href="https://t.me/zmcrew" class="btn-tele text-sm shadow-lg shadow-blue-500/20">HUBUNGI TELEGRAM ADMIN</a>
+
+        <img src="https://i.ibb.co/cXRFyvyw/67312.jpg" class="qr-img shadow-xl shadow-white/5">
+        
+        <p class="text-white text-[10px] font-bold uppercase tracking-widest">Sila hantar resit kepada admin selepas pembayaran</p>
+        <button onclick="location.reload()" class="mt-6 text-gray-500 underline text-[10px]">Cuba Log Masuk Semula</button>
     </div>
 </div>
 
 <div id="main-content" class="hidden-el lock-screen">
-    <div class="animate-pulse flex flex-col items-center">
+    <div class="flex flex-col items-center">
         <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-emerald-500 font-medium tracking-widest text-sm">MEMBINA SESI SELAMAT...</p>
+        <p class="text-emerald-500 font-medium tracking-widest text-sm italic">MEMBINA SESI SELAMAT...</p>
     </div>
 </div>
 
@@ -64,60 +80,81 @@ const firebaseConfig = {
   appId: "1:82335500997:web:c9a98eba582fee3092feac"
 };
 
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
 function getDeviceId(){
-    return btoa(navigator.userAgent + screen.width).substring(0,16);
+    return btoa(navigator.userAgent + screen.width + navigator.language).substring(0, 16);
 }
 
 async function handleLogin(){
-    const user = document.getElementById('user-input').value.trim();
-    const pass = document.getElementById('pass-input').value.trim();
+    const userField = document.getElementById('user-input');
+    const passField = document.getElementById('pass-input');
+    const loginBtn = document.getElementById('login-btn');
     const error = document.getElementById('error-msg');
 
-    if(!user || !pass) { error.innerText = "Isi maklumat!"; return; }
-    error.innerText = "Menyemak...";
+    const username = userField.value.trim();
+    const password = passField.value.trim();
+
+    if(!username || !password) { 
+        error.innerText = "Sila isi semua ruangan!"; 
+        return; 
+    }
+
+    loginBtn.disabled = true;
+    loginBtn.innerText = "MENYEMAK...";
 
     try {
-        // PERBAIKAN: Cari terus dalam koleksi 'users'
-        const snapshot = await db.collection("users")
-                                 .where("username", "==", user)
-                                 .where("password", "==", pass)
-                                 .get();
+        const snapshot = await db.collection("users").where("username", "==", username).get();
 
+        // 1. Username tidak ditemui
         if(snapshot.empty){
-            error.innerText = "Username atau Password salah!";
+            showBlock("Akses akaun anda tidak ditemui atau belum didaftarkan.");
             return;
         }
 
-        const doc = snapshot.docs[0];
-        const data = doc.data();
-        const myId = getDeviceId();
+        const userDoc = snapshot.docs[0];
+        const userData = userDoc.data();
+        const currentDeviceId = getDeviceId();
 
-        // Cek Status
-        if(data.status === "disekat" || data.status === "REVOKED"){
-            showBlock("Akses anda disekat oleh Admin.");
+        // 2. Password salah
+        if(userData.password !== password){
+            error.innerText = "Password salah!";
+            loginBtn.disabled = false;
+            loginBtn.innerText = "LOGIN SYSTEM";
             return;
         }
 
-        // Cek Expiry
-        if(data.expiryDate && new Date() > new Date(data.expiryDate)){
-            showBlock("Tempoh langganan tamat.");
+        // 3. Status Disekat/Banned
+        const bannedStatus = ["disekat", "REVOKED", "BANNED"];
+        if(bannedStatus.includes(userData.status)){
+            showBlock("Akses akaun anda telah disekat sementara waktu.");
             return;
         }
 
-        // Cek Device
-        if(data.deviceId && data.deviceId !== myId){
-            showBlock("ID dikunci pada peranti lain!");
-            return;
+        // 4. Tarikh Luput (Expired)
+        if(userData.expiryDate){
+            if(new Date() > new Date(userData.expiryDate)){
+                showBlock("Akses akaun anda telah tamat tempoh (Expired).");
+                return;
+            }
         }
 
-        if(!data.deviceId) await db.collection("users").doc(doc.id).update({ deviceId: myId });
+        // 5. Peranti Berbeza (Device Lock)
+        if(!userData.deviceId || userData.deviceId === ""){
+            await db.collection("users").doc(userDoc.id).update({ deviceId: currentDeviceId });
+        } 
+        else if(userData.deviceId !== currentDeviceId){
+            showBlock("Akses disekat kerana penggunaan ID peranti yang berbeza.");
+            return;
+        }
 
         showApp();
+
     } catch(e) {
         error.innerText = "Ralat: " + e.message;
+        loginBtn.disabled = false;
+        loginBtn.innerText = "LOGIN SYSTEM";
     }
 }
 
@@ -125,6 +162,7 @@ function showBlock(msg){
     document.getElementById("login-form").classList.add("hidden-el");
     document.getElementById("blocked-msg").classList.remove("hidden-el");
     document.getElementById("block-reason").innerText = msg;
+    document.body.style.overflow = 'auto'; // Benarkan scroll untuk lihat QR
 }
 
 function showApp(){
@@ -132,6 +170,8 @@ function showApp(){
     document.getElementById("main-content").classList.remove("hidden-el");
     setTimeout(() => { window.location.href = "https://www.grab.com/my/driver/"; }, 2000);
 }
+
+document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
 </script>
 </body>
 </html>
