@@ -11,11 +11,10 @@
     <style>
         body { background:#000; color:#fff; font-family:sans-serif; margin:0; overflow-x:hidden; }
         .hidden-el { display:none !important; }
-        .lock-screen { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; flex-direction:column; padding:20px; background: radial-gradient(circle, #051911 0%, #000000 100%); overflow-y: auto; }
+        .lock-screen { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; flex-direction:column; padding:20px; background: radial-gradient(circle, #051911 0%, #000000 100%); }
         .input-box { background:#111; border:1px solid #333; padding:14px; width:100%; margin-bottom:10px; border-radius:10px; color:#fff; outline:none; }
-        .input-box:focus { border-color: #10b981; }
-        .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; transition: 0.3s; cursor: pointer; }
-        .logo-img { width: 100px; height: 100px; object-fit: cover; margin: 0 auto 20px; border-radius: 50%; border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; cursor: pointer; }
+        .logo-img { width: 100px; height: 100px; object-fit: cover; margin: 0 auto 20px; border-radius: 50%; border: 2px solid #10b981; }
     </style>
 </head>
 <body>
@@ -24,48 +23,34 @@
     <div id="login-form" class="w-full max-w-md text-center">
         <img src="https://i.ibb.co/60PtNmBD/download.jpg" class="logo-img">
         <h1 class="text-2xl font-bold text-emerald-500 mb-2">ZM CREW SYSTEM</h1>
-        <p class="text-gray-400 mb-6 text-sm text-center uppercase">Sila masukkan akses anda</p>
+        <p class="text-gray-400 mb-6 text-sm uppercase">Sila masukkan akses anda</p>
 
         <input id="user-input" placeholder="Username" class="input-box">
         <input id="pass-input" type="password" placeholder="Password" class="input-box">
 
-        <button onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20 w-full uppercase">LOGIN SYSTEM</button>
+        <button onclick="handleLogin()" class="btn-login w-full uppercase">LOGIN SYSTEM</button>
         <p id="error-msg" class="text-red-500 mt-3 text-sm font-medium"></p>
-        
-        <div class="bg-red-950/20 border border-red-900/50 p-4 rounded-xl mt-6 text-left">
-            <p class="text-yellow-500 font-bold text-xs mb-1 uppercase">⚠️ Peringatan Penting:</p>
-            <p class="text-gray-300 text-[10px] leading-relaxed">
-                Gunakan MOD dengan bijak. Penyalahgunaan fungsi pilih job boleh mengakibatkan akaun digantung. Resiko ditanggung sendiri.
-            </p>
-        </div>
     </div>
 
     <div id="blocked-msg" class="hidden-el text-center p-6 w-full max-w-md">
-        <div class="mb-6">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 mb-4">
-                <span class="text-red-500 text-2xl">⚠️</span>
-            </div>
-            <h2 class="text-red-500 text-xl font-bold uppercase tracking-widest">Akses Disekat</h2>
-            <p id="block-reason" class="text-gray-400 text-[10px] mt-2 leading-relaxed uppercase"></p>
+        <h2 class="text-red-500 text-xl font-bold uppercase">Akses Disekat</h2>
+        <p id="block-reason" class="text-gray-400 text-[10px] mt-2 uppercase"></p>
+        <div class="bg-white p-2 rounded-xl my-4 inline-block">
+            <img src="https://i.ibb.co/cXRFyvyw/67312.jpg" alt="QR" class="w-64 h-auto rounded-lg">
         </div>
-
-        <p class="text-emerald-500 text-[9px] mb-4 font-bold tracking-tighter uppercase">
-            QR KE ADMIN JIKA MASIH BERMINAT BERLANGGANAN DAN MENERUSKAN SERVICE APLIKASI KAMI
-        </p>
-
-        <div class="bg-white p-2 rounded-xl inline-block shadow-lg shadow-emerald-500/10 mb-4">
-            <img src="https://i.ibb.co/cXRFyvyw/67312.jpg" alt="QR Payment" class="w-64 h-auto rounded-lg">
-        </div>
-
-        <p class="text-gray-500 text-[8px] mb-6 uppercase tracking-widest">Sila hantar resit kepada admin selepas pembayaran</p>
-        <button onclick="location.reload()" class="text-gray-400 underline text-[10px] uppercase">Cuba Semula</button>
+        <button onclick="location.reload()" class="text-gray-400 underline text-xs uppercase">Cuba Semula</button>
     </div>
 </div>
 
 <div id="main-content" class="hidden-el lock-screen">
-    <div class="animate-pulse flex flex-col items-center">
+    <div class="flex flex-col items-center text-center">
         <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-emerald-500 font-medium tracking-widest text-sm uppercase">Membina Sesi Selamat...</p>
+        <h2 class="text-emerald-500 font-bold text-lg mb-2">PENGESAHAN BERJAYA</h2>
+        <p class="text-gray-400 text-sm mb-6 px-10">Sistem akan membuka aplikasi Grab Driver sekarang...</p>
+        
+        <button onclick="launchGrabApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-full font-bold shadow-lg animate-bounce">
+            MASUK KE APLIKASI
+        </button>
     </div>
 </div>
 
@@ -92,24 +77,16 @@ async function handleLogin(){
 
     try {
         const snapshot = await db.collection("users").where("username", "==", user).where("password", "==", pass).get();
-
-        if(snapshot.empty){
-            error.innerText = "Username atau Password salah!";
-            return;
-        }
+        if(snapshot.empty){ error.innerText = "Akses Salah!"; return; }
 
         const data = snapshot.docs[0].data();
-        
-        // Cek Expiry atau Status
         if(data.status === "disekat" || (data.expiryDate && new Date() > new Date(data.expiryDate))){
-            showBlock("Akses akaun anda telah disekat sementara kerana masa aktif telah tamat");
+            showBlock("Masa aktif telah tamat");
             return;
         }
 
-        showApp();
-    } catch(e) {
-        error.innerText = "Ralat: " + e.message;
-    }
+        showSuccess();
+    } catch(e) { error.innerText = "Ralat Database!"; }
 }
 
 function showBlock(msg){
@@ -120,14 +97,20 @@ function showBlock(msg){
     document.getElementById("block-reason").innerText = msg;
 }
 
-function showApp(){
+function showSuccess(){
     document.getElementById("security-layer").classList.add("hidden-el");
     document.getElementById("main-content").classList.remove("hidden-el");
+    document.getElementById("main-content").classList.add("flex");
     
-    setTimeout(() => {
-        // KOD UNTUK BUKA APLIKASI GRAB DRIVER (ANDROID)
-        window.location.href = "intent://#Intent;package=com.grabtaxi.driver2;scheme=grab;end";
-    }, 2000);
+    // Auto-launch selepas 2 saat
+    setTimeout(launchGrabApp, 2000);
+}
+
+function launchGrabApp() {
+    // Gunakan Intent URI yang lebih kuat dengan fallback ke Play Store
+    const intentURL = "intent://#Intent;package=com.grabtaxi.driver2;scheme=grab;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.grabtaxi.driver2;end";
+    
+    window.location.href = intentURL;
 }
 </script>
 </body>
