@@ -2,25 +2,75 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ZMC System Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
-        body { background:#000; color:#fff; font-family:sans-serif; margin:0; overflow:hidden; }
+        body, html { 
+            background:#000; 
+            color:#fff; 
+            font-family:sans-serif; 
+            margin:0; 
+            padding:0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; 
+        }
         .hidden-el { display:none !important; }
-        .lock-screen { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; flex-direction:column; padding:20px; background: radial-gradient(circle, #051911 0%, #000000 100%); overflow-y: auto; z-index: 9999; }
-        .input-box { background:#111; border:1px solid #333; padding:14px; width:100%; margin-bottom:10px; border-radius:10px; color:#fff; outline:none; transition: 0.3s; }
+        .lock-screen { 
+            position:fixed; 
+            inset:0; 
+            display:flex; 
+            justify-content:center; 
+            align-items:center; 
+            flex-direction:column; 
+            padding:20px; 
+            background: radial-gradient(circle, #051911 0%, #000000 100%); 
+            z-index: 9999; 
+        }
+        .input-box { 
+            background:#111; 
+            border:1px solid #333; 
+            padding:14px; 
+            width:100%; 
+            margin-bottom:10px; 
+            border-radius:10px; 
+            color:#fff; 
+            outline:none; 
+            transition: 0.3s; 
+        }
         .input-box:focus { border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+        .pass-mask { -webkit-text-security: disc; }
+
         .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; transition: 0.3s; cursor: pointer; }
         .btn-login:disabled { background: #065f46; cursor: not-allowed; opacity: 0.7; }
         .logo-img { width: 100px; height: 100px; object-fit: cover; margin: 0 auto 20px; border-radius: 50%; border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
-        .warning-box { background: rgba(255, 0, 0, 0.05); border: 1px solid rgba(255, 255, 0, 0.2); padding: 12px; border-radius: 10px; margin-top: 20px; text-align: left; }
         
+        /* BAHAGIAN PERINGATAN YANG DIKEMASKINI */
+        .warning-box { 
+            background: rgba(255, 0, 0, 0.1); 
+            border: 2px solid rgba(255, 255, 0, 0.5); 
+            padding: 15px; 
+            border-radius: 12px; 
+            margin-top: 25px; 
+            text-align: center; 
+            animation: blink-animation 1s steps(5, start) infinite;
+            -webkit-animation: blink-animation 1s steps(5, start) infinite;
+        }
+
+        /* Animasi Berkelip */
+        @keyframes blink-animation {
+            to { visibility: hidden; }
+        }
+        @-webkit-keyframes blink-animation {
+            to { visibility: hidden; }
+        }
+
         .qr-container { display:flex; flex-direction:column; align-items:center; text-align:center; padding: 20px; color: #fff; width: 100%; }
-        .qr-img { border-radius: 12px; border: 4px solid #fff; width: 280px; height: auto; margin: 15px 0; }
+        .qr-img { border-radius: 12px; border: 4px solid #fff; width: 250px; height: auto; margin: 15px 0; }
         .btn-tele { background: #0088cc; color: #fff; padding: 12px 20px; border-radius: 8px; font-weight: bold; margin: 10px 0; display: inline-block; }
     </style>
 </head>
@@ -33,14 +83,17 @@
         <p class="text-gray-400 mb-6 text-sm italic">Sila masukkan akses anda</p>
 
         <input id="user-input" placeholder="Username" class="input-box" autocomplete="off" autocapitalize="none" spellcheck="false">
-        <input id="pass-input" type="password" placeholder="Password" class="input-box" autocapitalize="none">
+        <input id="pass-input" type="text" placeholder="Password" class="input-box pass-mask" autocomplete="off" autocapitalize="none">
 
         <button id="login-btn" onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20 uppercase">LOGIN SYSTEM</button>
         <p id="error-msg" class="text-red-500 mt-3 text-sm font-medium h-5"></p>
         
         <div class="warning-box">
-            <p class="text-yellow-500 font-bold text-xs mb-1">⚠️ PERINGATAN:</p>
-            <p class="text-gray-300 text-[10px] leading-relaxed">MOD dan FakeGps Hanya Alat bantu. Gunakan mengikut keperluan. <span class="text-red-500 font-bold underline">Resiko tanggung sendiri.</span></p>
+            <p class="text-yellow-400 font-black text-lg mb-2">⚠️ PERINGATAN KERAS:</p>
+            <p class="text-white text-xs font-bold leading-relaxed uppercase">
+                MOD dan FakeGps Hanya Alat bantu. <br>
+                <span class="text-red-500 underline decoration-2">Resiko tanggung sendiri sepenuhnya.</span>
+            </p>
         </div>
 
         <p class="mt-6 text-gray-500 text-xs">Belum ada akaun? <a href="https://t.me/zmcrew" class="text-emerald-500 underline">Hubungi Admin</a></p>
@@ -53,12 +106,9 @@
         <h2 class="text-red-500 text-xl font-bold uppercase tracking-widest">Akses Disekat</h2>
         <p id="block-reason" class="text-gray-300 text-xs my-2 px-6"></p>
         
-        <p class="text-emerald-400 text-[10px] font-bold mt-4">SILA KE ADMIN JIKA INGIN BERLANGGANAN / MEMPERBAHARUI SERVIS</p>
-        
+        <p class="text-emerald-400 text-[10px] font-bold mt-4 uppercase">Sila ke admin jika ingin berlangganan / memperbaharui servis</p>
         <a href="https://t.me/zmcrew" class="btn-tele text-sm shadow-lg shadow-blue-500/20 uppercase">Hubungi Telegram Admin</a>
-
         <img src="https://i.ibb.co/cXRFyvyw/67312.jpg" class="qr-img shadow-xl shadow-white/10">
-        
         <p class="text-white text-[10px] font-bold uppercase tracking-widest">Sila hantar resit kepada admin selepas pembayaran</p>
         <button onclick="location.reload()" class="mt-6 text-gray-500 underline text-[10px]">Cuba Log Masuk Semula</button>
     </div>
@@ -88,30 +138,22 @@ function getDeviceId(){
     return btoa(navigator.userAgent + screen.width + navigator.language).substring(0, 16);
 }
 
-// Fungsi utama untuk memantau status secara Real-Time
 function startRealTimeMonitor(docId) {
     db.collection("users").doc(docId).onSnapshot((doc) => {
         if (!doc.exists) {
             showBlock("Akaun anda telah dipadamkan daripada sistem.");
             return;
         }
-
         const data = doc.data();
         const bannedStatus = ["disekat", "REVOKED", "BANNED"];
-        
-        // 1. Cek Status Banned
         if (bannedStatus.includes(data.status)) {
             showBlock("Akses akaun anda telah digantung/disekat oleh admin serta-merta.");
             return;
         }
-
-        // 2. Cek Expiry Date
         if (data.expiryDate && new Date() > new Date(data.expiryDate)) {
             showBlock("Masa aktif anda telah tamat. Sila perbaharui langganan.");
             return;
         }
-        
-        // 3. Cek Device ID (HWID Lock)
         const currentDeviceId = getDeviceId();
         if (data.deviceId && data.deviceId !== currentDeviceId) {
             showBlock("ID dikesan pada peranti lain! Akses ditutup automatik.");
@@ -125,7 +167,6 @@ async function handleLogin(){
     const passField = document.getElementById('pass-input');
     const loginBtn = document.getElementById('login-btn');
     const error = document.getElementById('error-msg');
-
     const username = userField.value.trim().toLowerCase();
     const password = passField.value.trim();
 
@@ -140,37 +181,29 @@ async function handleLogin(){
 
     try {
         const snapshot = await db.collection("users").where("username", "==", username).get();
-
         if(snapshot.empty){
-            showBlock("Akses akaun tidak ditemui.");
+            error.innerText = "Akses akaun tidak ditemui.";
+            loginBtn.disabled = false;
+            loginBtn.innerText = "LOGIN SYSTEM";
             return;
         }
-
         const userDoc = snapshot.docs[0];
         const userData = userDoc.data();
         const currentDeviceId = getDeviceId();
-
         if(userData.password !== password){
             error.innerText = "Username atau Password salah!";
             loginBtn.disabled = false;
             loginBtn.innerText = "LOGIN SYSTEM";
             return;
         }
-
-        // Jalankan monitor sebaik sahaja maklumat padan
         startRealTimeMonitor(userDoc.id);
-
-        // Jika semua OK, baru benarkan masuk
         if (!["disekat", "REVOKED", "BANNED"].includes(userData.status) && 
             (!userData.expiryDate || new Date() <= new Date(userData.expiryDate))) {
-            
             if(!userData.deviceId || userData.deviceId === ""){
                 await db.collection("users").doc(userDoc.id).update({ deviceId: currentDeviceId });
             }
-            
             showApp();
         }
-
     } catch(e) {
         error.innerText = "Ralat: Sambungan Bermasalah";
         loginBtn.disabled = false;
@@ -179,16 +212,12 @@ async function handleLogin(){
 }
 
 function showBlock(msg){
-    // Paksa tutup semua skrin lain dan tunjuk skrin sekat
     document.getElementById("security-layer").classList.remove("hidden-el");
     document.getElementById("main-content").classList.add("hidden-el");
     document.getElementById("login-form").classList.add("hidden-el");
     document.getElementById("blocked-msg").classList.remove("hidden-el");
     document.getElementById("block-reason").innerText = msg;
-    
-    // Jika user cuba pusing (bypass), kita paksa balik ke atas
     window.scrollTo(0,0);
-    document.body.style.overflow = 'hidden'; 
 }
 
 function showApp(){
