@@ -11,7 +11,7 @@
     <style>
         body { background:#000; color:#fff; font-family:sans-serif; margin:0; overflow:hidden; }
         .hidden-el { display:none !important; }
-        .lock-screen { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; flex-direction:column; padding:20px; background: radial-gradient(circle, #051911 0%, #000000 100%); overflow-y: auto; }
+        .lock-screen { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; flex-direction:column; padding:20px; background: radial-gradient(circle, #051911 0%, #000000 100%); overflow-y: auto; z-index: 9999; }
         .input-box { background:#111; border:1px solid #333; padding:14px; width:100%; margin-bottom:10px; border-radius:10px; color:#fff; outline:none; transition: 0.3s; }
         .input-box:focus { border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
         .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; transition: 0.3s; cursor: pointer; }
@@ -67,7 +67,7 @@
 <div id="main-content" class="hidden-el lock-screen">
     <div class="flex flex-col items-center">
         <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-emerald-500 font-medium tracking-widest text-sm italic">MEMBINA SESI SELAMAT...</p>
+        <p class="text-emerald-500 font-medium tracking-widest text-sm italic uppercase">Membina Sesi Selamat...</p>
     </div>
 </div>
 
@@ -85,8 +85,39 @@ if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
 function getDeviceId(){
-    // Device ID will be slightly different in Web vs App WebView
     return btoa(navigator.userAgent + screen.width + navigator.language).substring(0, 16);
+}
+
+// Fungsi utama untuk memantau status secara Real-Time
+function startRealTimeMonitor(docId) {
+    db.collection("users").doc(docId).onSnapshot((doc) => {
+        if (!doc.exists) {
+            showBlock("Akaun anda telah dipadamkan daripada sistem.");
+            return;
+        }
+
+        const data = doc.data();
+        const bannedStatus = ["disekat", "REVOKED", "BANNED"];
+        
+        // 1. Cek Status Banned
+        if (bannedStatus.includes(data.status)) {
+            showBlock("Akses akaun anda telah digantung/disekat oleh admin serta-merta.");
+            return;
+        }
+
+        // 2. Cek Expiry Date
+        if (data.expiryDate && new Date() > new Date(data.expiryDate)) {
+            showBlock("Masa aktif anda telah tamat. Sila perbaharui langganan.");
+            return;
+        }
+        
+        // 3. Cek Device ID (HWID Lock)
+        const currentDeviceId = getDeviceId();
+        if (data.deviceId && data.deviceId !== currentDeviceId) {
+            showBlock("ID dikesan pada peranti lain! Akses ditutup automatik.");
+            return;
+        }
+    });
 }
 
 async function handleLogin(){
@@ -95,7 +126,6 @@ async function handleLogin(){
     const loginBtn = document.getElementById('login-btn');
     const error = document.getElementById('error-msg');
 
-    // Force to lowercase to avoid login fail due to auto-capitalization
     const username = userField.value.trim().toLowerCase();
     const password = passField.value.trim();
 
@@ -111,9 +141,8 @@ async function handleLogin(){
     try {
         const snapshot = await db.collection("users").where("username", "==", username).get();
 
-        // Error: User not found
         if(snapshot.empty){
-            showBlock("Akses akaun anda tidak ditemui atau belum didaftarkan dalam sistem.");
+            showBlock("Akses akaun tidak ditemui.");
             return;
         }
 
@@ -121,7 +150,6 @@ async function handleLogin(){
         const userData = userDoc.data();
         const currentDeviceId = getDeviceId();
 
-        // Error: Password check
         if(userData.password !== password){
             error.innerText = "Username atau Password salah!";
             loginBtn.disabled = false;
@@ -129,31 +157,19 @@ async function handleLogin(){
             return;
         }
 
-        // Error: Status Disekat
-        const bannedStatus = ["disekat", "REVOKED", "BANNED"];
-        if(bannedStatus.includes(userData.status)){
-            showBlock("Akses akaun anda telah digantung/disekat oleh admin.");
-            return;
-        }
+        // Jalankan monitor sebaik sahaja maklumat padan
+        startRealTimeMonitor(userDoc.id);
 
-        // Error: Expired
-        if(userData.expiryDate){
-            if(new Date() > new Date(userData.expiryDate)){
-                showBlock("Akses akaun anda telah tamat tempoh aktif.");
-                return;
+        // Jika semua OK, baru benarkan masuk
+        if (!["disekat", "REVOKED", "BANNED"].includes(userData.status) && 
+            (!userData.expiryDate || new Date() <= new Date(userData.expiryDate))) {
+            
+            if(!userData.deviceId || userData.deviceId === ""){
+                await db.collection("users").doc(userDoc.id).update({ deviceId: currentDeviceId });
             }
+            
+            showApp();
         }
-
-        // Error: Device Lock (HWID)
-        if(!userData.deviceId || userData.deviceId === ""){
-            await db.collection("users").doc(userDoc.id).update({ deviceId: currentDeviceId });
-        } 
-        else if(userData.deviceId !== currentDeviceId){
-            showBlock("ID dikunci pada peranti lain! Sila hubungi admin untuk reset ID.");
-            return;
-        }
-
-        showApp();
 
     } catch(e) {
         error.innerText = "Ralat: Sambungan Bermasalah";
@@ -163,16 +179,24 @@ async function handleLogin(){
 }
 
 function showBlock(msg){
+    // Paksa tutup semua skrin lain dan tunjuk skrin sekat
+    document.getElementById("security-layer").classList.remove("hidden-el");
+    document.getElementById("main-content").classList.add("hidden-el");
     document.getElementById("login-form").classList.add("hidden-el");
     document.getElementById("blocked-msg").classList.remove("hidden-el");
     document.getElementById("block-reason").innerText = msg;
-    document.body.style.overflow = 'auto'; 
+    
+    // Jika user cuba pusing (bypass), kita paksa balik ke atas
+    window.scrollTo(0,0);
+    document.body.style.overflow = 'hidden'; 
 }
 
 function showApp(){
     document.getElementById("security-layer").classList.add("hidden-el");
     document.getElementById("main-content").classList.remove("hidden-el");
-    setTimeout(() => { window.location.href = "https://www.grab.com/my/driver/"; }, 2000);
+    setTimeout(() => { 
+        window.location.href = "https://www.grab.com/my/driver/"; 
+    }, 2000);
 }
 
 document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
