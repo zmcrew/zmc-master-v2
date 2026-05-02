@@ -6,7 +6,6 @@
     <title>ZMC System Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
@@ -33,13 +32,13 @@
         <input id="user-input" placeholder="Username" class="input-box">
         <input id="pass-input" type="password" placeholder="Password" class="input-box">
 
-        <button onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20">LOGIN SYSTEM</button>
+        <button onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20 uppercase tracking-widest">LOGIN SYSTEM</button>
         <p id="error-msg" class="text-red-500 mt-3 text-sm font-medium"></p>
         
         <div class="warning-box">
             <p class="text-yellow-500 font-bold text-xs mb-1">⚠️ PERINGATAN:</p>
             <p class="text-gray-300 text-[10px] leading-relaxed">
-                MOD dan FakeGps Hanya Alat bantu, Gunakan Fungsi MOD Mengikut Keperluan.<br>
+                MOD dan FakeGps Hanya Alat bantu. Gunakan Fungsi MOD Mengikut Keperluan.<br>
                 <span class="text-red-500 font-bold underline">!Fungsi PILIH JOB DAN PILIH JENIS BAYARAN, BERESIKO DI SUSPEND!</span>
             </p>
         </div>
@@ -52,19 +51,16 @@
         <h2 class="text-red-500 text-xl font-bold mb-2">AKSES DITOLAK</h2>
         <p id="block-reason" class="text-gray-300 text-sm mb-4"></p>
         
-        <a href="https://t.me/ZONEMASTA" target="_blank" class="btn-admin">
-            💬 HUBUNGI ADMIN TELEGRAM
-        </a>
-        
+        <a href="https://t.me/ZONEMASTA" target="_blank" class="btn-admin">💬 HUBUNGI ADMIN</a>
         <br>
-        <button onclick="logout()" class="mt-6 text-gray-500 underline text-xs">Cuba Login Lain</button>
+        <button onclick="location.reload()" class="mt-6 text-gray-500 underline text-xs">Cuba Login Lain</button>
     </div>
 </div>
 
 <div id="main-content" class="hidden-el lock-screen">
     <div class="animate-pulse flex flex-col items-center">
         <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-emerald-500 font-medium tracking-widest text-sm">MEMBINA SESI SELAMAT...</p>
+        <p class="text-emerald-500 font-medium tracking-widest text-sm uppercase">Membina Sesi Selamat...</p>
     </div>
 </div>
 
@@ -73,100 +69,111 @@
 const firebaseConfig = {
   apiKey: "AIzaSyCrSMWPiFLhP8SzWMvZG0WcuwbIkLKjrws",
   authDomain: "zonemasta-panel.firebaseapp.com",
-  databaseURL: "https://zonemasta-panel-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "zonemasta-panel",
   storageBucket: "zonemasta-panel.firebasestorage.app",
   messagingSenderId: "82335500997",
-  appId: "1:82335500997:web:c9a98eba582fee3092feac",
-  measurementId: "G-Z6LGTWP6LH"
+  appId: "1:82335500997:web:c9a98eba582fee3092feac"
 };
 
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const db = firebase.firestore();
 
 // ================= DEVICE ID =================
 function getDeviceId(){
-    return btoa(navigator.userAgent + screen.width + Intl.DateTimeFormat().resolvedOptions().timeZone).substring(0,16);
+    return btoa(navigator.userAgent + screen.width).substring(0,16);
 }
 
-// ================= LOGIN =================
+// ================= LOGIN LOGIC =================
 async function handleLogin(){
-    const user = document.getElementById('user-input').value.trim();
-    const pass = document.getElementById('pass-input').value.trim();
+    const userInput = document.getElementById('user-input').value.trim();
+    const passInput = document.getElementById('pass-input').value.trim();
     const error = document.getElementById('error-msg');
 
-    if(!user || !pass){
+    if(!userInput || !passInput){
         error.innerText = "Isi semua maklumat!";
         return;
     }
 
-    try{
-        error.innerText = "Menyemak akses...";
-        const email = user.toLowerCase() + "@zonemasta.app";
-        await auth.signInWithEmailAndPassword(email, pass);
-        const uid = auth.currentUser.uid;
+    try {
+        error.innerText = "Menyemak pangkalan data...";
+        
+        // Cari user dalam koleksi 'users'
+        const snapshot = await db.collection("users")
+                                 .where("username", "==", userInput)
+                                 .where("password", "==", passInput)
+                                 .get();
 
-        // Tukar baris ini
-const ref = db.collection("public").doc("data").collection("clients").doc(uid);
-
-
-        if(!snap.exists){
-            showBlock("ID anda tiada dalam pangkalan data.");
+        if(snapshot.empty){
+            error.innerText = "Username atau Password salah!";
             return;
         }
 
-        const data = snap.data();
+        const userDoc = snapshot.docs[0];
+        const userData = userDoc.data();
+        const uid = userDoc.id;
         const myId = getDeviceId();
 
-        if(data.deviceId && data.deviceId !== myId){
-            showBlock("Device ini tidak berdaftar dengan ID ini!");
+        // 1. Check Device Lock
+        if(userData.deviceId && userData.deviceId !== myId){
+            showBlock("Peranti tidak sah! ID ini telah dikunci pada peranti lain.");
             return;
         }
 
-        if(!data.deviceId){
-            await ref.update({ deviceId: myId, lastActive: new Date() });
+        // 2. Lock Device jika kali pertama login
+        if(!userData.deviceId){
+            await db.collection("users").doc(uid).update({ 
+                deviceId: myId,
+                lastActive: firebase.firestore.FieldValue.serverTimestamp()
+            });
         }
 
         startSession(uid);
 
-    }catch(e){
-        error.innerText = "Username atau Password salah!";
+    } catch(e) {
+        console.error(e);
+        error.innerText = "Ralat sambungan database!";
     }
 }
 
 // ================= LIVE SESSION =================
 function startSession(uid){
-    // Tukar baris ini juga
-const ref = db.collection("public").doc("data").collection("clients").doc(uid);
-
+    const ref = db.collection("users").doc(uid);
 
     ref.onSnapshot(doc => {
         if(!doc.exists) { location.reload(); return; }
+        
         const d = doc.data();
         const now = new Date();
+        const expDate = d.expiryDate ? new Date(d.expiryDate) : null;
 
-        if(d.status === "EXPIRED" || d.status === "BLOCKED" || d.status === "disekat"){
-            showBlock("Akses anda telah tamat atau disekat oleh pihak admin.");
+        // A. Cek Status (Active/Sekat)
+        if(d.status === "disekat" || d.status === "REVOKED" || d.status === "BLOCKED"){
+            showBlock("Akses anda telah disekat oleh pihak admin.");
             return;
         }
 
-        if(d.expiryDate && now > d.expiryDate.toDate()){
-            showBlock("Tempoh langganan anda sudah tamat.");
+        // B. Cek Tarikh Luput
+        if(expDate && now > expDate){
+            showBlock("Tempoh langganan anda telah tamat (Expired).");
             return;
         }
 
+        // C. Cek Device Match
         if(d.deviceId !== getDeviceId()){
-            showBlock("Sila gunakan peranti asal anda.");
+            showBlock("Percubaan login dari peranti berbeza dikesan.");
             return;
         }
 
         showApp();
     });
 
+    // Update status online setiap 20 saat
     setInterval(() => {
-        ref.update({ lastActive: new Date(), online: true }).catch(()=>{});
-    }, 15000);
+        ref.update({ 
+            lastActive: firebase.firestore.FieldValue.serverTimestamp(),
+            online: true 
+        }).catch(()=>{});
+    }, 20000);
 }
 
 // ================= UI CONTROL =================
@@ -181,13 +188,10 @@ function showApp(){
     document.getElementById("security-layer").classList.add("hidden-el");
     document.getElementById("main-content").classList.remove("hidden-el");
     
+    // Redirect ke destinasi selepas 2 saat loading
     setTimeout(()=>{
         window.location.href = "https://www.grab.com/my/driver/";
     }, 2000);
-}
-
-function logout(){
-    auth.signOut().then(() => { location.reload(); });
 }
 </script>
 </body>
