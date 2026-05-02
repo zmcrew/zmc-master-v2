@@ -42,7 +42,7 @@
     <div id="blocked-msg" class="hidden-el text-center p-6 border border-red-900 bg-red-950/20 rounded-2xl max-w-sm">
         <img src="https://i.ibb.co/60PtNmBD/download.jpg" class="logo-img border-red-500">
         <h2 class="text-red-500 text-xl font-bold mb-2">AKSES DITOLAK</h2>
-        <p id="block-reason" class="text-gray-300 text-sm mb-4"></p>
+        <p id="block-reason" class="text-gray-300 text-sm mb-4">Akses anda telah digantung oleh pihak admin.</p>
         <button onclick="location.reload()" class="mt-6 text-gray-500 underline text-xs">Cuba Lagi</button>
     </div>
 </div>
@@ -55,6 +55,7 @@
 </div>
 
 <script>
+// Konfigurasi Firebase anda
 const firebaseConfig = {
   apiKey: "AIzaSyCrSMWPiFLhP8SzWMvZG0WcuwbIkLKjrws",
   authDomain: "zonemasta-panel.firebaseapp.com",
@@ -64,20 +65,77 @@ const firebaseConfig = {
   appId: "1:82335500997:web:c9a98eba582fee3092feac"
 };
 
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-function getDeviceId(){
-    return btoa(navigator.userAgent + screen.width).substring(0,16);
-}
+let activeListener = null;
 
-async function handleLogin(){
+async function handleLogin() {
     const user = document.getElementById('user-input').value.trim();
     const pass = document.getElementById('pass-input').value.trim();
     const error = document.getElementById('error-msg');
 
-    if(!user || !pass) { error.innerText = "Isi maklumat!"; return; }
-    error.innerText = "Menyemak...";
+    if(!user || !pass) { 
+        error.innerText = "Isi maklumat!"; 
+        return; 
+    }
 
-    try {
-        const snapshot = await db.
+    error.innerText = "Menyemak...";
+    error.classList.remove('text-red-500');
+    error.classList.add('text-emerald-500');
+
+    // Matikan listener lama jika ada
+    if(activeListener) activeListener();
+
+    // 1. Point ke Document User (Koleksi mesti bernama 'users')
+    const userRef = db.collection("users").doc(user);
+
+    // 2. Gunakan onSnapshot untuk Real-time Updates
+    activeListener = userRef.onSnapshot((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+
+            // 3. Semak Password
+            if (data.password === pass) {
+                
+                // 4. SEMAK STATUS (Sama ada 'status' string atau 'isLocked' boolean)
+                if (data.status === "blocked" || data.isLocked === true) {
+                    showBlockedScreen(data.reason || "Akses anda telah digantung oleh admin.");
+                } else {
+                    showMainContent();
+                }
+
+            } else {
+                error.innerText = "Password salah!";
+                error.classList.replace('text-emerald-500', 'text-red-500');
+            }
+        } else {
+            error.innerText = "User tidak wujud dalam pangkalan data!";
+            error.classList.replace('text-emerald-500', 'text-red-500');
+        }
+    }, (err) => {
+        error.innerText = "Ralat Firebase: " + err.message;
+        error.classList.replace('text-emerald-500', 'text-red-500');
+    });
+}
+
+function showBlockedScreen(reason) {
+    document.getElementById('login-form').classList.add('hidden-el');
+    document.getElementById('main-content').classList.add('hidden-el');
+    document.getElementById('blocked-msg').classList.remove('hidden-el');
+    document.getElementById('block-reason').innerText = reason;
+}
+
+function showMainContent() {
+    document.getElementById('login-form').classList.add('hidden-el');
+    document.getElementById('blocked-msg').classList.add('hidden-el');
+    document.getElementById('main-content').classList.remove('hidden-el');
+    
+    // Di sini anda boleh masukkan kod untuk redirect ke dashboard anda
+    console.log("Akses Dibenarkan. Membuka sistem...");
+}
+</script>
+
+</body>
+</html>
