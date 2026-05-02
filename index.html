@@ -19,7 +19,6 @@
         .logo-img { width: 100px; height: 100px; object-fit: cover; margin: 0 auto 20px; border-radius: 50%; border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
         .warning-box { background: rgba(255, 0, 0, 0.05); border: 1px solid rgba(255, 255, 0, 0.2); padding: 12px; border-radius: 10px; margin-top: 20px; text-align: left; }
         
-        /* Layout Pembayaran QR */
         .qr-container { display:flex; flex-direction:column; align-items:center; text-align:center; padding: 20px; color: #fff; width: 100%; }
         .qr-img { border-radius: 12px; border: 4px solid #fff; width: 280px; height: auto; margin: 15px 0; }
         .btn-tele { background: #0088cc; color: #fff; padding: 12px 20px; border-radius: 8px; font-weight: bold; margin: 10px 0; display: inline-block; }
@@ -30,33 +29,35 @@
 <div id="security-layer" class="lock-screen">
     <div id="login-form" class="w-full max-w-md text-center">
         <img src="https://i.ibb.co/60PtNmBD/download.jpg" class="logo-img">
-        <h1 class="text-2xl font-bold text-emerald-500 mb-2">ZM CREW SYSTEM</h1>
-        <p class="text-gray-400 mb-6 text-sm">Sila masukkan akses anda</p>
+        <h1 class="text-2xl font-bold text-emerald-500 mb-2 uppercase tracking-tight">ZM CREW SYSTEM</h1>
+        <p class="text-gray-400 mb-6 text-sm italic">Sila masukkan akses anda</p>
 
-        <input id="user-input" placeholder="Username" class="input-box" autocomplete="off">
-        <input id="pass-input" type="password" placeholder="Password" class="input-box">
+        <input id="user-input" placeholder="Username" class="input-box" autocomplete="off" autocapitalize="none" spellcheck="false">
+        <input id="pass-input" type="password" placeholder="Password" class="input-box" autocapitalize="none">
 
         <button id="login-btn" onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20 uppercase">LOGIN SYSTEM</button>
         <p id="error-msg" class="text-red-500 mt-3 text-sm font-medium h-5"></p>
         
         <div class="warning-box">
             <p class="text-yellow-500 font-bold text-xs mb-1">⚠️ PERINGATAN:</p>
-            <p class="text-gray-300 text-[10px] leading-relaxed">Gunakan Fungsi MOD mengikut keperluan. Segala risiko adalah tanggungjawab sendiri.</p>
+            <p class="text-gray-300 text-[10px] leading-relaxed">MOD dan FakeGps Hanya Alat bantu. Gunakan mengikut keperluan. <span class="text-red-500 font-bold underline">Resiko tanggung sendiri.</span></p>
         </div>
+
+        <p class="mt-6 text-gray-500 text-xs">Belum ada akaun? <a href="https://t.me/zmcrew" class="text-emerald-500 underline">Hubungi Admin</a></p>
     </div>
 
     <div id="blocked-msg" class="hidden-el qr-container">
-        <div class="bg-red-600 p-2 rounded-full mb-4">
+        <div class="bg-red-600 p-2 rounded-full mb-4 shadow-lg shadow-red-500/50">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
         </div>
-        <h2 class="text-red-500 text-xl font-bold uppercase">Akses Disekat</h2>
+        <h2 class="text-red-500 text-xl font-bold uppercase tracking-widest">Akses Disekat</h2>
         <p id="block-reason" class="text-gray-300 text-xs my-2 px-6"></p>
         
         <p class="text-emerald-400 text-[10px] font-bold mt-4">SILA KE ADMIN JIKA INGIN BERLANGGANAN / MEMPERBAHARUI SERVIS</p>
         
-        <a href="https://t.me/zmcrew" class="btn-tele text-sm shadow-lg shadow-blue-500/20">HUBUNGI TELEGRAM ADMIN</a>
+        <a href="https://t.me/zmcrew" class="btn-tele text-sm shadow-lg shadow-blue-500/20 uppercase">Hubungi Telegram Admin</a>
 
-        <img src="https://i.ibb.co/cXRFyvyw/67312.jpg" class="qr-img shadow-xl shadow-white/5">
+        <img src="https://i.ibb.co/cXRFyvyw/67312.jpg" class="qr-img shadow-xl shadow-white/10">
         
         <p class="text-white text-[10px] font-bold uppercase tracking-widest">Sila hantar resit kepada admin selepas pembayaran</p>
         <button onclick="location.reload()" class="mt-6 text-gray-500 underline text-[10px]">Cuba Log Masuk Semula</button>
@@ -84,6 +85,7 @@ if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
 function getDeviceId(){
+    // Device ID will be slightly different in Web vs App WebView
     return btoa(navigator.userAgent + screen.width + navigator.language).substring(0, 16);
 }
 
@@ -93,23 +95,25 @@ async function handleLogin(){
     const loginBtn = document.getElementById('login-btn');
     const error = document.getElementById('error-msg');
 
-    const username = userField.value.trim();
+    // Force to lowercase to avoid login fail due to auto-capitalization
+    const username = userField.value.trim().toLowerCase();
     const password = passField.value.trim();
 
     if(!username || !password) { 
-        error.innerText = "Sila isi semua ruangan!"; 
+        error.innerText = "Isi maklumat akses!"; 
         return; 
     }
 
     loginBtn.disabled = true;
     loginBtn.innerText = "MENYEMAK...";
+    error.innerText = "";
 
     try {
         const snapshot = await db.collection("users").where("username", "==", username).get();
 
-        // 1. Username tidak ditemui
+        // Error: User not found
         if(snapshot.empty){
-            showBlock("Akses akaun anda tidak ditemui atau belum didaftarkan.");
+            showBlock("Akses akaun anda tidak ditemui atau belum didaftarkan dalam sistem.");
             return;
         }
 
@@ -117,42 +121,42 @@ async function handleLogin(){
         const userData = userDoc.data();
         const currentDeviceId = getDeviceId();
 
-        // 2. Password salah
+        // Error: Password check
         if(userData.password !== password){
-            error.innerText = "Password salah!";
+            error.innerText = "Username atau Password salah!";
             loginBtn.disabled = false;
             loginBtn.innerText = "LOGIN SYSTEM";
             return;
         }
 
-        // 3. Status Disekat/Banned
+        // Error: Status Disekat
         const bannedStatus = ["disekat", "REVOKED", "BANNED"];
         if(bannedStatus.includes(userData.status)){
-            showBlock("Akses akaun anda telah disekat sementara waktu.");
+            showBlock("Akses akaun anda telah digantung/disekat oleh admin.");
             return;
         }
 
-        // 4. Tarikh Luput (Expired)
+        // Error: Expired
         if(userData.expiryDate){
             if(new Date() > new Date(userData.expiryDate)){
-                showBlock("Akses akaun anda telah tamat tempoh (Expired).");
+                showBlock("Akses akaun anda telah tamat tempoh aktif.");
                 return;
             }
         }
 
-        // 5. Peranti Berbeza (Device Lock)
+        // Error: Device Lock (HWID)
         if(!userData.deviceId || userData.deviceId === ""){
             await db.collection("users").doc(userDoc.id).update({ deviceId: currentDeviceId });
         } 
         else if(userData.deviceId !== currentDeviceId){
-            showBlock("Akses disekat kerana penggunaan ID peranti yang berbeza.");
+            showBlock("ID dikunci pada peranti lain! Sila hubungi admin untuk reset ID.");
             return;
         }
 
         showApp();
 
     } catch(e) {
-        error.innerText = "Ralat: " + e.message;
+        error.innerText = "Ralat: Sambungan Bermasalah";
         loginBtn.disabled = false;
         loginBtn.innerText = "LOGIN SYSTEM";
     }
@@ -162,7 +166,7 @@ function showBlock(msg){
     document.getElementById("login-form").classList.add("hidden-el");
     document.getElementById("blocked-msg").classList.remove("hidden-el");
     document.getElementById("block-reason").innerText = msg;
-    document.body.style.overflow = 'auto'; // Benarkan scroll untuk lihat QR
+    document.body.style.overflow = 'auto'; 
 }
 
 function showApp(){
