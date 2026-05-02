@@ -49,7 +49,7 @@
         .btn-login:disabled { background: #065f46; cursor: not-allowed; opacity: 0.7; }
         .logo-img { width: 100px; height: 100px; object-fit: cover; margin: 0 auto 20px; border-radius: 50%; border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
         
-        /* BAHAGIAN PERINGATAN YANG DIKEMASKINI */
+        /* PERINGATAN BESAR & BERKELIP */
         .warning-box { 
             background: rgba(255, 0, 0, 0.1); 
             border: 2px solid rgba(255, 255, 0, 0.5); 
@@ -61,7 +61,6 @@
             -webkit-animation: blink-animation 1s steps(5, start) infinite;
         }
 
-        /* Animasi Berkelip */
         @keyframes blink-animation {
             to { visibility: hidden; }
         }
@@ -106,7 +105,7 @@
         <h2 class="text-red-500 text-xl font-bold uppercase tracking-widest">Akses Disekat</h2>
         <p id="block-reason" class="text-gray-300 text-xs my-2 px-6"></p>
         
-        <p class="text-emerald-400 text-[10px] font-bold mt-4 uppercase">Sila ke admin jika ingin berlangganan / memperbaharui servis</p>
+        <p class="text-emerald-400 text-[10px] font-bold mt-4 uppercase">SILA KE ADMIN JIKA INGIN BERLANGGANAN / MEMPERBAHARUI SERVIS</p>
         <a href="https://t.me/zmcrew" class="btn-tele text-sm shadow-lg shadow-blue-500/20 uppercase">Hubungi Telegram Admin</a>
         <img src="https://i.ibb.co/cXRFyvyw/67312.jpg" class="qr-img shadow-xl shadow-white/10">
         <p class="text-white text-[10px] font-bold uppercase tracking-widest">Sila hantar resit kepada admin selepas pembayaran</p>
@@ -176,59 +175,4 @@ async function handleLogin(){
     }
 
     loginBtn.disabled = true;
-    loginBtn.innerText = "MENYEMAK...";
-    error.innerText = "";
-
-    try {
-        const snapshot = await db.collection("users").where("username", "==", username).get();
-        if(snapshot.empty){
-            error.innerText = "Akses akaun tidak ditemui.";
-            loginBtn.disabled = false;
-            loginBtn.innerText = "LOGIN SYSTEM";
-            return;
-        }
-        const userDoc = snapshot.docs[0];
-        const userData = userDoc.data();
-        const currentDeviceId = getDeviceId();
-        if(userData.password !== password){
-            error.innerText = "Username atau Password salah!";
-            loginBtn.disabled = false;
-            loginBtn.innerText = "LOGIN SYSTEM";
-            return;
-        }
-        startRealTimeMonitor(userDoc.id);
-        if (!["disekat", "REVOKED", "BANNED"].includes(userData.status) && 
-            (!userData.expiryDate || new Date() <= new Date(userData.expiryDate))) {
-            if(!userData.deviceId || userData.deviceId === ""){
-                await db.collection("users").doc(userDoc.id).update({ deviceId: currentDeviceId });
-            }
-            showApp();
-        }
-    } catch(e) {
-        error.innerText = "Ralat: Sambungan Bermasalah";
-        loginBtn.disabled = false;
-        loginBtn.innerText = "LOGIN SYSTEM";
-    }
-}
-
-function showBlock(msg){
-    document.getElementById("security-layer").classList.remove("hidden-el");
-    document.getElementById("main-content").classList.add("hidden-el");
-    document.getElementById("login-form").classList.add("hidden-el");
-    document.getElementById("blocked-msg").classList.remove("hidden-el");
-    document.getElementById("block-reason").innerText = msg;
-    window.scrollTo(0,0);
-}
-
-function showApp(){
-    document.getElementById("security-layer").classList.add("hidden-el");
-    document.getElementById("main-content").classList.remove("hidden-el");
-    setTimeout(() => { 
-        window.location.href = "https://www.grab.com/my/driver/"; 
-    }, 2000);
-}
-
-document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
-</script>
-</body>
-</html>
+    loginBtn.innerText =
