@@ -15,8 +15,6 @@
         .input-box { background:#111; border:1px solid #333; padding:14px; width:100%; margin-bottom:10px; border-radius:10px; color:#fff; outline:none; }
         .input-box:focus { border-color: #10b981; }
         .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; transition: 0.3s; }
-        .btn-login:active { transform: scale(0.95); }
-        .btn-admin { background:#0088cc; color:#fff; padding:10px 20px; border-radius:8px; margin-top:15px; display:inline-block; font-weight: 500; }
         .logo-img { width: 100px; height: 100px; object-fit: cover; margin: 0 auto 20px; border-radius: 50%; border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
         .warning-box { background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 255, 0, 0.3); padding: 12px; border-radius: 10px; margin-top: 20px; text-align: left; }
     </style>
@@ -32,40 +30,31 @@
         <input id="user-input" placeholder="Username" class="input-box">
         <input id="pass-input" type="password" placeholder="Password" class="input-box">
 
-        <button onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20 uppercase tracking-widest">LOGIN SYSTEM</button>
+        <button onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20 uppercase">LOGIN SYSTEM</button>
         <p id="error-msg" class="text-red-500 mt-3 text-sm font-medium"></p>
         
         <div class="warning-box">
             <p class="text-yellow-500 font-bold text-xs mb-1">⚠️ PERINGATAN:</p>
-            <p class="text-gray-300 text-[10px] leading-relaxed">
-                MOD dan FakeGps Hanya Alat bantu. Gunakan Fungsi MOD Mengikut Keperluan.<br>
-                <span class="text-red-500 font-bold underline">!Fungsi PILIH JOB DAN PILIH JENIS BAYARAN, BERESIKO DI SUSPEND!</span>
-            </p>
+            <p class="text-gray-300 text-[10px] leading-relaxed">Gunakan Fungsi MOD Mengikut Keperluan. Resiko tanggung sendiri.</p>
         </div>
-
-        <a href="https://t.me/ZONEMASTA" target="_blank" class="block mt-6 text-xs text-gray-500 underline">Belum ada akaun? Hubungi Admin</a>
     </div>
 
     <div id="blocked-msg" class="hidden-el text-center p-6 border border-red-900 bg-red-950/20 rounded-2xl max-w-sm">
-        <img src="https://i.ibb.co/60PtNmBD/download.jpg" class="logo-img border-red-500 shadow-red-500/40">
+        <img src="https://i.ibb.co/60PtNmBD/download.jpg" class="logo-img border-red-500">
         <h2 class="text-red-500 text-xl font-bold mb-2">AKSES DITOLAK</h2>
         <p id="block-reason" class="text-gray-300 text-sm mb-4"></p>
-        
-        <a href="https://t.me/ZONEMASTA" target="_blank" class="btn-admin">💬 HUBUNGI ADMIN</a>
-        <br>
-        <button onclick="location.reload()" class="mt-6 text-gray-500 underline text-xs">Cuba Login Lain</button>
+        <button onclick="location.reload()" class="mt-6 text-gray-500 underline text-xs">Cuba Lagi</button>
     </div>
 </div>
 
 <div id="main-content" class="hidden-el lock-screen">
     <div class="animate-pulse flex flex-col items-center">
         <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-emerald-500 font-medium tracking-widest text-sm uppercase">Membina Sesi Selamat...</p>
+        <p class="text-emerald-500 font-medium tracking-widest text-sm">MEMBINA SESI SELAMAT...</p>
     </div>
 </div>
 
 <script>
-// ================= CONFIG FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyCrSMWPiFLhP8SzWMvZG0WcuwbIkLKjrws",
   authDomain: "zonemasta-panel.firebaseapp.com",
@@ -78,29 +67,23 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ================= DEVICE ID =================
 function getDeviceId(){
     return btoa(navigator.userAgent + screen.width).substring(0,16);
 }
 
-// ================= LOGIN LOGIC =================
 async function handleLogin(){
-    const userInput = document.getElementById('user-input').value.trim();
-    const passInput = document.getElementById('pass-input').value.trim();
+    const user = document.getElementById('user-input').value.trim();
+    const pass = document.getElementById('pass-input').value.trim();
     const error = document.getElementById('error-msg');
 
-    if(!userInput || !passInput){
-        error.innerText = "Isi semua maklumat!";
-        return;
-    }
+    if(!user || !pass) { error.innerText = "Isi maklumat!"; return; }
+    error.innerText = "Menyemak...";
 
     try {
-        error.innerText = "Menyemak pangkalan data...";
-        
-        // Cari user dalam koleksi 'users'
+        // PERBAIKAN: Cari terus dalam koleksi 'users'
         const snapshot = await db.collection("users")
-                                 .where("username", "==", userInput)
-                                 .where("password", "==", passInput)
+                                 .where("username", "==", user)
+                                 .where("password", "==", pass)
                                  .get();
 
         if(snapshot.empty){
@@ -108,78 +91,38 @@ async function handleLogin(){
             return;
         }
 
-        const userDoc = snapshot.docs[0];
-        const userData = userDoc.data();
-        const uid = userDoc.id;
+        const doc = snapshot.docs[0];
+        const data = doc.data();
         const myId = getDeviceId();
 
-        // 1. Check Device Lock
-        if(userData.deviceId && userData.deviceId !== myId){
-            showBlock("Peranti tidak sah! ID ini telah dikunci pada peranti lain.");
+        // Cek Status
+        if(data.status === "disekat" || data.status === "REVOKED"){
+            showBlock("Akses anda disekat oleh Admin.");
             return;
         }
 
-        // 2. Lock Device jika kali pertama login
-        if(!userData.deviceId){
-            await db.collection("users").doc(uid).update({ 
-                deviceId: myId,
-                lastActive: firebase.firestore.FieldValue.serverTimestamp()
-            });
+        // Cek Expiry
+        if(data.expiryDate && new Date() > new Date(data.expiryDate)){
+            showBlock("Tempoh langganan tamat.");
+            return;
         }
 
-        startSession(uid);
+        // Cek Device
+        if(data.deviceId && data.deviceId !== myId){
+            showBlock("ID dikunci pada peranti lain!");
+            return;
+        }
 
+        if(!data.deviceId) await db.collection("users").doc(doc.id).update({ deviceId: myId });
+
+        showApp();
     } catch(e) {
-        console.error(e);
-        error.innerText = "Ralat sambungan database!";
+        error.innerText = "Ralat: " + e.message;
     }
 }
 
-// ================= LIVE SESSION =================
-function startSession(uid){
-    const ref = db.collection("users").doc(uid);
-
-    ref.onSnapshot(doc => {
-        if(!doc.exists) { location.reload(); return; }
-        
-        const d = doc.data();
-        const now = new Date();
-        const expDate = d.expiryDate ? new Date(d.expiryDate) : null;
-
-        // A. Cek Status (Active/Sekat)
-        if(d.status === "disekat" || d.status === "REVOKED" || d.status === "BLOCKED"){
-            showBlock("Akses anda telah disekat oleh pihak admin.");
-            return;
-        }
-
-        // B. Cek Tarikh Luput
-        if(expDate && now > expDate){
-            showBlock("Tempoh langganan anda telah tamat (Expired).");
-            return;
-        }
-
-        // C. Cek Device Match
-        if(d.deviceId !== getDeviceId()){
-            showBlock("Percubaan login dari peranti berbeza dikesan.");
-            return;
-        }
-
-        showApp();
-    });
-
-    // Update status online setiap 20 saat
-    setInterval(() => {
-        ref.update({ 
-            lastActive: firebase.firestore.FieldValue.serverTimestamp(),
-            online: true 
-        }).catch(()=>{});
-    }, 20000);
-}
-
-// ================= UI CONTROL =================
 function showBlock(msg){
     document.getElementById("login-form").classList.add("hidden-el");
-    document.getElementById("main-content").classList.add("hidden-el");
     document.getElementById("blocked-msg").classList.remove("hidden-el");
     document.getElementById("block-reason").innerText = msg;
 }
@@ -187,11 +130,7 @@ function showBlock(msg){
 function showApp(){
     document.getElementById("security-layer").classList.add("hidden-el");
     document.getElementById("main-content").classList.remove("hidden-el");
-    
-    // Redirect ke destinasi selepas 2 saat loading
-    setTimeout(()=>{
-        window.location.href = "https://www.grab.com/my/driver/";
-    }, 2000);
+    setTimeout(() => { window.location.href = "https://www.grab.com/my/driver/"; }, 2000);
 }
 </script>
 </body>
