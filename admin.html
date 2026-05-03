@@ -314,6 +314,16 @@
         };
         window.closeConfirm = () => document.getElementById('confirm-modal').classList.add('hidden');
 
+        // FUNGSI AUTO LOGIN
+        async function checkExistingSession() {
+            const savedUser = localStorage.getItem('zm-admin-user');
+            const savedType = localStorage.getItem('zm-admin-type');
+            if (savedUser && savedType) {
+                adminType = savedType;
+                loginSuccess(savedUser, true);
+            }
+        }
+
         window.verifyAdmin = async function() {
             const u = document.getElementById('admin-user-input').value;
             const p = document.getElementById('admin-pass-input').value;
@@ -337,14 +347,18 @@
             } catch (e) { errorMsg.innerText = "RALAT SAMBUNGAN"; }
         };
 
-        function loginSuccess(user) {
+        function loginSuccess(user, isAuto = false) {
             currentAdmin = user;
+            // Simpan ke localStorage
+            localStorage.setItem('zm-admin-user', user);
+            localStorage.setItem('zm-admin-type', adminType);
+
             document.getElementById('admin-display').innerText = `OPERATOR: ${user.toUpperCase()} (${adminType})`;
             document.getElementById('admin-login-layer').classList.add('hidden');
             document.getElementById('console-section').classList.remove('hidden');
             if(adminType === "SUPER") document.getElementById('super-admin-view').classList.remove('hidden');
             init();
-            showToast("AKSES DITERIMA");
+            if(!isAuto) showToast("AKSES DITERIMA");
         }
 
         async function init() {
@@ -417,7 +431,7 @@
             const u = document.getElementById('form-username').value;
             const p = document.getElementById('form-password').value;
             const s = document.getElementById('form-status').value;
-            const e = document.getElementById('form-expiry').value; // Ambil nilai datetime-local
+            const e = document.getElementById('form-expiry').value; 
             const d = document.getElementById('form-deviceid').value;
             if(!u || !p) return showToast("DATA TIDAK LENGKAP");
             
@@ -511,8 +525,10 @@
 
         function updateClock() {
             const now = new Date();
-            document.getElementById('live-clock').innerText = now.toLocaleTimeString('en-GB', { hour12: false });
-            document.getElementById('live-date').innerText = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+            const clockEl = document.getElementById('live-clock');
+            const dateEl = document.getElementById('live-date');
+            if(clockEl) clockEl.innerText = now.toLocaleTimeString('en-GB', { hour12: false });
+            if(dateEl) dateEl.innerText = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
         }
         setInterval(updateClock, 1000);
 
@@ -557,7 +573,15 @@
         };
 
         window.closeSuccessModal = () => document.getElementById('success-modal').classList.add('hidden');
-        window.logout = () => location.reload();
+        
+        window.logout = () => {
+            localStorage.removeItem('zm-admin-user');
+            localStorage.removeItem('zm-admin-type');
+            location.reload();
+        };
+
+        // RUN ON STARTUP
+        checkExistingSession();
     </script>
 </body>
 </html>
