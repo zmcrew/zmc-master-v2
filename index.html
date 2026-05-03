@@ -16,13 +16,10 @@
         .input-box:focus { border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
         .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; transition: 0.3s; cursor: pointer; }
         
-        /* Animasi Berkelip (Blink) */
         @keyframes blinker { 50% { opacity: 0; } }
         .blink-text { animation: blinker 1s linear infinite; }
         
-        /* Tulisan Peringatan Besar */
         .warning-text-large { font-size: 1.25rem; line-height: 1.75rem; font-weight: 800; text-transform: uppercase; }
-
         .logo-img { width: 100px; height: 100px; object-fit: cover; margin: 0 auto 20px; border-radius: 50%; border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
         .warning-box { background: rgba(255, 0, 0, 0.1); border: 2px solid #ff0000; padding: 15px; border-radius: 10px; margin-top: 25px; text-align: center; }
         
@@ -57,13 +54,9 @@
         </div>
         <h2 class="text-red-500 text-2xl font-bold uppercase blink-text">Akses Disekat</h2>
         <p id="block-reason" class="text-white text-sm font-bold my-2 px-6"></p>
-        
         <p class="text-emerald-400 text-xs font-bold mt-4 blink-text">SILA KE ADMIN JIKA INGIN BERLANGGANAN / MEMPERBAHARUI SERVIS</p>
-        
         <a href="https://t.me/zmcrew" class="btn-tele text-sm shadow-lg shadow-blue-500/20">HUBUNGI TELEGRAM ADMIN</a>
-
         <img src="https://i.ibb.co/cXRFyvyw/67312.jpg" class="qr-img shadow-xl shadow-white/5">
-        
         <p class="text-white text-xs font-bold uppercase tracking-widest blink-text">HANTAR RESIT KEPADA ADMIN SELEPAS PEMBAYARAN</p>
         <button onclick="location.reload()" class="mt-6 text-gray-500 underline text-[10px]">Cuba Log Masuk Semula</button>
     </div>
@@ -77,7 +70,6 @@
 </div>
 
 <script>
-// Firebase Config asal dikekalkan
 const firebaseConfig = {
   apiKey: "AIzaSyCrSMWPiFLhP8SzWMvZG0WcuwbIkLKjrws",
   authDomain: "zonemasta-panel.firebaseapp.com",
@@ -90,8 +82,13 @@ const firebaseConfig = {
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
-function getDeviceId(){
-    return btoa(navigator.userAgent + screen.width + navigator.language).substring(0, 16);
+// Fungsi untuk ambil Device ID dari Android melalui Sketchware Interface
+function getAndroidDeviceId() {
+    if (window.Android && window.Android.getDeviceId) {
+        return window.Android.getDeviceId();
+    }
+    // Fallback jika dibuka di pelayar biasa
+    return btoa(navigator.userAgent + screen.width).substring(0, 16);
 }
 
 async function handleLogin(){
@@ -121,7 +118,7 @@ async function handleLogin(){
 
         const userDoc = snapshot.docs[0];
         const userData = userDoc.data();
-        const currentDeviceId = getDeviceId();
+        const currentDeviceId = getAndroidDeviceId();
 
         if(userData.password !== password){
             error.innerText = "Password salah!";
@@ -148,6 +145,41 @@ async function handleLogin(){
         } 
         else if(userData.deviceId !== currentDeviceId){
             showBlock("Akses disekat kerana penggunaan ID peranti yang berbeza.");
+            return;
+        }
+
+        showApp();
+
+    } catch(e) {
+        error.innerText = "Ralat: " + e.message;
+        loginBtn.disabled = false;
+        loginBtn.innerText = "LOGIN SYSTEM";
+    }
+}
+
+function showBlock(msg){
+    document.getElementById("login-form").classList.add("hidden-el");
+    document.getElementById("blocked-msg").classList.remove("hidden-el");
+    document.getElementById("block-reason").innerText = msg;
+}
+
+function showApp(){
+    document.getElementById("security-layer").classList.add("hidden-el");
+    document.getElementById("main-content").classList.remove("hidden-el");
+    // Interface untuk Sketchware menutup WebView dan masuk ke Grab
+    setTimeout(() => { 
+        if (window.Android && window.Android.loginSuccess) {
+            window.Android.loginSuccess();
+        } else {
+            window.location.href = "zmc://login_success"; 
+        }
+    }, 2000);
+}
+
+document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+</script>
+</body>
+</html>
             return;
         }
 
