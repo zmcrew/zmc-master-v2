@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZMC | LOGIN ACCESS</title>
+    <title>ZMC | SECURE ACCESS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -22,11 +22,7 @@
             background:#000; 
             color: var(--neon-cyan); 
             font-family: 'Fira Code', monospace; 
-            margin:0; 
-            padding:0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden; 
+            margin:0; padding:0; width: 100%; height: 100%; overflow: hidden; 
         }
 
         #matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.5; }
@@ -39,36 +35,22 @@
             border: 1px solid rgba(0, 243, 255, 0.3); 
             border-radius: 16px; 
             box-shadow: 0 0 20px rgba(0, 243, 255, 0.1); 
-            padding: 2rem;
-            width: 100%;
-            max-width: 400px;
+            padding: 2rem; width: 100%; max-width: 400px;
         }
 
         .hacker-input { 
             background: rgba(0, 0, 0, 0.7) !important; 
             border: 1px solid rgba(0, 243, 255, 0.4) !important; 
-            color: #fff !important; 
-            padding: 14px; 
-            width: 100%; 
-            margin-bottom: 10px; 
-            border-radius: 8px;
-            outline: none; 
-            transition: 0.3s; 
+            color: #fff !important; padding: 14px; width: 100%; margin-bottom: 10px; 
+            border-radius: 8px; outline: none; transition: 0.3s; 
         }
         .hacker-input:focus { border-color: var(--neon-cyan) !important; box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); }
         .pass-mask { -webkit-text-security: disc; }
 
         .btn-cyber { 
-            background: transparent; 
-            border: 1px solid var(--neon-cyan); 
-            color: var(--neon-cyan); 
-            padding: 14px; 
-            width: 100%; 
-            font-weight: bold; 
-            transition: 0.3s; 
-            cursor: pointer; 
-            clip-path: polygon(5% 0, 100% 0, 95% 100%, 0% 100%);
-            text-transform: uppercase;
+            background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); 
+            padding: 14px; width: 100%; font-weight: bold; transition: 0.3s; cursor: pointer; 
+            clip-path: polygon(5% 0, 100% 0, 95% 100%, 0% 100%); text-transform: uppercase;
         }
         .btn-cyber:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 20px var(--neon-cyan); }
         .btn-cyber:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -76,22 +58,16 @@
         .logo-glow { 
             width: 100px; height: 100px; object-fit: cover; margin: 0 auto 20px; 
             border-radius: 50%; border: 2px solid var(--neon-cyan); 
-            filter: drop-shadow(0 0 10px var(--neon-cyan));
-            animation: pulse 3s infinite;
+            filter: drop-shadow(0 0 10px var(--neon-cyan)); animation: pulse 3s infinite;
         }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
         .warning-box { 
-            background: rgba(255, 0, 60, 0.1); 
-            border: 1px solid var(--neon-red); 
-            padding: 10px; 
-            margin-top: 20px; 
-            text-align: center; 
-            animation: blink 1s infinite alternate;
+            background: rgba(255, 0, 60, 0.1); border: 1px solid var(--neon-red); 
+            padding: 10px; margin-top: 20px; text-align: center; animation: blink 1s infinite alternate;
         }
         @keyframes blink { from { opacity: 1; } to { opacity: 0.6; } }
 
-        .qr-container { text-align: center; color: #fff; }
         .qr-img { border: 2px solid var(--neon-cyan); width: 200px; margin: 15px auto; filter: grayscale(1) invert(1) brightness(1.5); }
     </style>
 </head>
@@ -102,18 +78,18 @@
 <div class="fixed inset-0 flex items-center justify-center p-6 z-10">
     <div id="login-form" class="glass-box animate__animated animate__fadeIn">
         <img src="https://i.ibb.co/60PtNmBD/download.jpg" class="logo-glow">
-        <h1 class="orbitron text-xl font-bold text-center mb-1 tracking-widest">ZONE<span class="text-white">MASTA</span></h1>
-        <p class="text-[10px] text-center text-cyan-500/60 mb-6 uppercase tracking-widest">System Access Protocol</p>
+        <h1 class="orbitron text-xl font-bold text-center mb-1 tracking-widest text-white">ZMC <span class="text-cyan-400">SYSTEM</span></h1>
+        <p class="text-[10px] text-center text-cyan-500/60 mb-6 uppercase tracking-widest">Protocol Version 2.0</p>
 
         <input id="user-input" placeholder="USER_ID" class="hacker-input text-xs orbitron" autocomplete="off">
         <input id="pass-input" type="text" placeholder="ACCESS_KEY" class="hacker-input pass-mask text-xs orbitron" autocomplete="off">
 
-        <button id="login-btn" onclick="handleLogin()" class="btn-cyber orbitron text-sm">Execute_Login</button>
+        <button id="login-btn" onclick="handleLogin()" class="btn-cyber orbitron text-sm">Verify_Identity</button>
         <p id="error-msg" class="text-red-500 mt-3 text-[9px] font-bold h-4 text-center uppercase"></p>
         
         <div class="warning-box">
-            <p class="text-red-500 font-bold text-[10px] uppercase">⚠️ High Risk Warning</p>
-            <p class="text-white text-[8px] leading-tight uppercase">Mod & FakeGPS are tools only. Use at your own risk.</p>
+            <p class="text-red-500 font-bold text-[10px] uppercase">⚠️ Security Notice</p>
+            <p class="text-white text-[8px] leading-tight uppercase">Unauthorized access is logged.</p>
         </div>
     </div>
 
@@ -121,20 +97,22 @@
         <div class="text-red-500 mb-4 text-3xl">⚠️</div>
         <h2 class="orbitron text-red-500 text-lg font-bold uppercase tracking-widest">Access_Denied</h2>
         <p id="block-reason" class="text-gray-400 text-[10px] my-4 font-mono uppercase"></p>
-        
         <div class="bg-black/50 p-4 rounded-lg mb-4 border border-cyan-500/20">
-            <p class="text-cyan-400 text-[9px] font-bold mb-2 uppercase">Scan to Renew Access</p>
             <img src="https://i.ibb.co/cXRFyvyw/67312.jpg" class="qr-img">
         </div>
-        
-        <a href="https://t.me/zmcrew" class="text-cyan-500 text-[10px] orbitron hover:underline">CONTACT_ADMIN_TELEGRAM</a>
-        <br>
-        <button onclick="location.reload()" class="mt-4 text-gray-600 text-[8px] uppercase tracking-widest">Re-attempt_Connection</button>
+        <a href="https://t.me/zmcrew" class="text-cyan-500 text-[10px] orbitron hover:underline uppercase">Contact Admin</a>
+        <button onclick="location.reload()" class="block w-full mt-4 text-gray-600 text-[8px] uppercase">Reload_System</button>
+    </div>
+
+    <div id="redirect-msg" class="hidden-el glass-box text-center animate__animated animate__pulse animate__infinite">
+        <div class="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <h2 class="orbitron text-cyan-400 text-sm font-bold uppercase">Injecting_Session...</h2>
+        <p class="text-white text-[9px] mt-2 font-mono">Redirecting to App Protocol</p>
     </div>
 </div>
 
 <script>
-// Firebase Config (Sama seperti master console anda)
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCrSMWPiFLhP8SzWMvZG0WcuwbIkLKjrws",
   authDomain: "zonemasta-panel.firebaseapp.com",
@@ -147,11 +125,11 @@ const firebaseConfig = {
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
-// Matrix Rain Effect
+// Matrix Rain
 const canvas = document.getElementById('matrix-canvas');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-const letters = "01ZONEMASTA$#@&*";
+const letters = "01ZMC$#@&*";
 const fontSize = 14;
 const drops = Array(Math.floor(canvas.width / fontSize)).fill(1);
 
@@ -172,6 +150,16 @@ function getDeviceId(){
     return btoa(navigator.userAgent + screen.width + navigator.language).substring(0, 16);
 }
 
+function showApp(){
+    document.getElementById("login-form").classList.add("hidden-el");
+    document.getElementById("redirect-msg").classList.remove("hidden-el");
+    
+    setTimeout(() => { 
+        // CRITICAL: Melencong semula ke Aplikasi Mod anda menggunakan Scheme yang didaftarkan di Manifest
+        window.location.href = "zmc://login_success"; 
+    }, 2000);
+}
+
 function showBlock(msg){
     document.getElementById("login-form").classList.add("hidden-el");
     document.getElementById("blocked-msg").classList.remove("hidden-el");
@@ -186,65 +174,48 @@ async function handleLogin(){
     const username = userField.value.trim().toLowerCase();
     const password = passField.value.trim();
 
-    if(!username || !password) { 
-        error.innerText = "Error: Missing Credentials"; 
-        return; 
-    }
+    if(!username || !password) { error.innerText = "MISSING_DATA"; return; }
 
     loginBtn.disabled = true;
-    loginBtn.innerText = "AUTHENTICATING...";
+    loginBtn.innerText = "VALIDATING...";
     error.innerText = "";
 
     try {
         const snapshot = await db.collection("users").where("username", "==", username).get();
-        
-        if(snapshot.empty){
-            showBlock("Status: Account Not Registered");
-            return;
-        }
+        if(snapshot.empty){ showBlock("USER_NOT_FOUND"); return; }
 
         const userDoc = snapshot.docs[0];
         const userData = userDoc.data();
         const currentDeviceId = getDeviceId();
 
         if(userData.password !== password){
-            error.innerText = "Status: Invalid Access Key";
+            error.innerText = "WRONG_ACCESS_KEY";
             loginBtn.disabled = false;
-            loginBtn.innerText = "Execute_Login";
+            loginBtn.innerText = "Verify_Identity";
             return;
         }
 
         if (userData.deviceId && userData.deviceId !== currentDeviceId) {
-            showBlock("Status: Hardware ID Mismatch");
+            showBlock("HARDWARE_ID_MISMATCH");
             return;
         }
 
-        const bannedStatus = ["disekat", "REVOKED", "BANNED"];
-        const isBanned = bannedStatus.includes(userData.status);
+        const isBanned = ["disekat", "REVOKED", "BANNED"].includes(userData.status);
         const isExpired = userData.expiryDate && new Date() > new Date(userData.expiryDate);
 
-        if (isBanned) {
-            showBlock("Status: Account Terminated by Admin");
-        } else if (isExpired) {
-            showBlock("Status: Subscription Period Expired");
-        } else {
-            if(!userData.deviceId || userData.deviceId === ""){
+        if (isBanned) { showBlock("ACCOUNT_BANNED"); } 
+        else if (isExpired) { showBlock("LICENSE_EXPIRED"); } 
+        else {
+            if(!userData.deviceId) {
                 await db.collection("users").doc(userDoc.id).update({ deviceId: currentDeviceId });
             }
-            loginBtn.innerText = "ACCESS GRANTED";
-            setTimeout(() => { 
-                window.location.href = "https://www.grab.com/my/driver/"; 
-            }, 1000);
+            showApp();
         }
-
     } catch(e) {
-        error.innerText = "Status: Connection Refused";
+        error.innerText = "CONNECTION_ERROR";
         loginBtn.disabled = false;
-        loginBtn.innerText = "Execute_Login";
     }
 }
-
-document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
 </script>
 </body>
 </html>
