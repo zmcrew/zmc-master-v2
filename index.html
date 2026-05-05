@@ -33,7 +33,7 @@
 <div id="security-layer" class="lock-screen">
     <div id="login-form" class="w-full max-w-md text-center">
         <img src="https://i.ibb.co/60PtNmBD/download.jpg" class="logo-img">
-        <h1 class="text-3xl font-bold text-emerald-500 mb-2">ZM CREW SYSTEM</h1>
+        <h1 class="text-3xl font-bold text-emerald-500 mb-2">ZONE MASTA SYSTEM</h1>
         <p class="text-gray-400 mb-6 text-sm">Sila masukkan akses anda</p>
 
         <input id="user-input" placeholder="Username" class="input-box" autocomplete="off">
@@ -63,9 +63,16 @@
 </div>
 
 <div id="main-content" class="hidden-el lock-screen">
-    <div class="flex flex-col items-center">
+    <div class="flex flex-col items-center text-center">
         <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <p class="text-emerald-500 font-bold tracking-widest text-lg blink-text">MEMBINA SESI SELAMAT...</p>
+        
+        <div id="manual-trigger" class="mt-8 hidden-el">
+            <a href="zmc://login_success" style="background:#10b981; color:#000; padding:15px 30px; border-radius:10px; font-weight:bold; text-decoration:none; display:inline-block; border: 2px solid #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);">
+                [ KLIK SINI UNTUK MASUK APLIKASI ]
+            </a>
+            <p class="text-red-500 text-[10px] mt-3 uppercase font-bold">*Sila klik butang di atas jika skrin tidak bertukar secara automatik</p>
+        </div>
     </div>
 </div>
 
@@ -82,12 +89,10 @@ const firebaseConfig = {
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
-// Fungsi untuk ambil Device ID dari Android melalui Sketchware Interface
 function getAndroidDeviceId() {
     if (window.Android && window.Android.getDeviceId) {
         return window.Android.getDeviceId();
     }
-    // Fallback jika dibuka di pelayar biasa
     return btoa(navigator.userAgent + screen.width).substring(0, 16);
 }
 
@@ -161,12 +166,19 @@ function showBlock(msg){
     document.getElementById("login-form").classList.add("hidden-el");
     document.getElementById("blocked-msg").classList.remove("hidden-el");
     document.getElementById("block-reason").innerText = msg;
+    document.body.style.overflow = 'auto'; 
 }
 
 function showApp(){
     document.getElementById("security-layer").classList.add("hidden-el");
     document.getElementById("main-content").classList.remove("hidden-el");
-    // Interface untuk Sketchware menutup WebView dan masuk ke Grab
+    
+    // Paparkan butang manual sekiranya automatik gagal
+    setTimeout(() => {
+        document.getElementById("manual-trigger").classList.remove("hidden-el");
+    }, 1500);
+
+    // CRITICAL: Melompat semula ke APK Grab Driver / Taster Project anda
     setTimeout(() => { 
         if (window.Android && window.Android.loginSuccess) {
             window.Android.loginSuccess();
@@ -174,36 +186,6 @@ function showApp(){
             window.location.href = "zmc://login_success"; 
         }
     }, 2000);
-}
-
-document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
-</script>
-</body>
-</html>
-            return;
-        }
-
-        showApp();
-
-    } catch(e) {
-        error.innerText = "Ralat: " + e.message;
-        loginBtn.disabled = false;
-        loginBtn.innerText = "LOGIN SYSTEM";
-    }
-}
-
-function showBlock(msg){
-    document.getElementById("login-form").classList.add("hidden-el");
-    document.getElementById("blocked-msg").classList.remove("hidden-el");
-    document.getElementById("block-reason").innerText = msg;
-    document.body.style.overflow = 'auto'; 
-}
-
-function showApp(){
-    document.getElementById("security-layer").classList.add("hidden-el");
-    document.getElementById("main-content").classList.remove("hidden-el");
-    // CRITICAL: Melompat semula ke APK Grab Driver anda
-    setTimeout(() => { window.location.href = "zmc://login_success"; }, 2000);
 }
 
 document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
