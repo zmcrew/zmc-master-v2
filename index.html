@@ -194,16 +194,3 @@ document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogi
 </script>
 </body>
 </html>
-    setTimeout(() => { 
-        if (window.Android && window.Android.loginSuccess) {
-            window.Android.loginSuccess();
-        } else {
-            window.location.href = "zmc://login_success"; 
-        }
-    }, 2000);
-}
-
-document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
-</script>
-</body>
-</html>
