@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZMC System Control</title>
+    <title>ZoneMasta System Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -12,9 +12,11 @@
         body { background:#000; color:#fff; font-family:sans-serif; margin:0; overflow:hidden; }
         .hidden-el { display:none !important; }
         .lock-screen { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; flex-direction:column; padding:20px; background: radial-gradient(circle, #051911 0%, #000000 100%); overflow-y: auto; }
+        
+        /* Tiada paksaan uppercase untuk membenarkan input campuran besar/kecil */
         .input-box { background:#111; border:1px solid #333; padding:14px; width:100%; margin-bottom:10px; border-radius:10px; color:#fff; outline:none; transition: 0.3s; }
         .input-box:focus { border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
-        .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; transition: 0.3s; cursor: pointer; }
+        .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; transition: 0.3s; cursor: pointer; text-transform: uppercase; }
         
         @keyframes blinker { 50% { opacity: 0; } }
         .blink-text { animation: blinker 1s linear infinite; }
@@ -39,7 +41,7 @@
         <input id="user-input" placeholder="Username" class="input-box" autocomplete="off">
         <input id="pass-input" type="password" placeholder="Password" class="input-box">
 
-        <button id="login-btn" onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20 uppercase">LOGIN SYSTEM</button>
+        <button id="login-btn" onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20">LOGIN SYSTEM</button>
         <p id="error-msg" class="text-red-500 mt-3 text-sm font-medium h-5"></p>
         
         <div class="warning-box">
@@ -108,6 +110,90 @@ async function handleLogin(){
     if(!username || !password) { 
         error.innerText = "Sila isi semua ruangan!"; 
         return; 
+    }
+
+    loginBtn.disabled = true;
+    loginBtn.innerText = "MENYEMAK...";
+
+    try {
+        const snapshot = await db.collection("users").where("username", "==", username).get();
+
+        if(snapshot.empty){
+            showBlock("Akses akaun anda tidak ditemui atau belum didaftarkan.");
+            return;
+        }
+
+        const userDoc = snapshot.docs[0];
+        const userData = userDoc.data();
+        const currentDeviceId = getAndroidDeviceId();
+
+        if(userData.password !== password){
+            error.innerText = "Password salah!";
+            loginBtn.disabled = false;
+            loginBtn.innerText = "LOGIN SYSTEM";
+            return;
+        }
+
+        const bannedStatus = ["disekat", "REVOKED", "BANNED"];
+        if(bannedStatus.includes(userData.status)){
+            showBlock("Akses akaun anda telah disekat sementara waktu.");
+            return;
+        }
+
+        if(userData.expiryDate){
+            if(new Date() > new Date(userData.expiryDate)){
+                showBlock("Akses akaun anda telah tamat tempoh (Expired).");
+                return;
+            }
+        }
+
+        if(!userData.deviceId || userData.deviceId === ""){
+            await db.collection("users").doc(userDoc.id).update({ deviceId: currentDeviceId });
+        } 
+        else if(userData.deviceId !== currentDeviceId){
+            showBlock("Akses disekat kerana penggunaan ID peranti yang berbeza.");
+            return;
+        }
+
+        showApp();
+
+    } catch(e) {
+        error.innerText = "Ralat: " + e.message;
+        loginBtn.disabled = false;
+        loginBtn.innerText = "LOGIN SYSTEM";
+    }
+}
+
+function showBlock(msg){
+    document.getElementById("login-form").classList.add("hidden-el");
+    document.getElementById("blocked-msg").classList.remove("hidden-el");
+    document.getElementById("block-reason").innerText = msg;
+    document.body.style.overflow = 'auto'; 
+}
+
+function showApp(){
+    document.getElementById("security-layer").classList.add("hidden-el");
+    document.getElementById("main-content").classList.remove("hidden-el");
+    
+    // Paparkan butang manual sekiranya automatik gagal selepas 1.5 saat
+    setTimeout(() => {
+        document.getElementById("manual-trigger").classList.remove("hidden-el");
+    }, 1500);
+
+    // CRITICAL: Cuba lantingkan secara automatik ke APK ZoneMasta
+    setTimeout(() => { 
+        if (window.Android && window.Android.loginSuccess) {
+            window.Android.loginSuccess();
+        } else {
+            window.location.href = "zmc://login_success"; 
+        }
+    }, 2000);
+}
+
+document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+</script>
+</body>
+</html>
     }
 
     loginBtn.disabled = true;
