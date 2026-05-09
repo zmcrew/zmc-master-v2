@@ -1,183 +1,1218 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZMC System Control</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ZoneMasta System Control</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 
-    <style>
-        body { background:#000; color:#fff; font-family:sans-serif; margin:0; overflow:hidden; }
-        .hidden-el { display:none !important; }
-        .lock-screen { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; flex-direction:column; padding:20px; background: radial-gradient(circle, #051911 0%, #000000 100%); overflow-y: auto; }
-        .input-box { background:#111; border:1px solid #333; padding:14px; width:100%; margin-bottom:10px; border-radius:10px; color:#fff; outline:none; transition: 0.3s; }
-        .input-box:focus { border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
-        .btn-login { background:#10b981; color:#000; padding:14px; width:100%; border-radius:10px; font-weight:bold; transition: 0.3s; cursor: pointer; }
-        
-        @keyframes blinker { 50% { opacity: 0; } }
-        .blink-text { animation: blinker 1s linear infinite; }
-        
-        .warning-text-large { font-size: 1.25rem; line-height: 1.75rem; font-weight: 800; text-transform: uppercase; }
-        .logo-img { width: 100px; height: 100px; object-fit: cover; margin: 0 auto 20px; border-radius: 50%; border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
-        .warning-box { background: rgba(255, 0, 0, 0.1); border: 2px solid #ff0000; padding: 15px; border-radius: 10px; margin-top: 25px; text-align: center; }
-        
-        .qr-container { display:flex; flex-direction:column; align-items:center; text-align:center; padding: 20px; color: #fff; width: 100%; }
-        .qr-img { border-radius: 12px; border: 4px solid #fff; width: 280px; height: auto; margin: 15px 0; }
-        .btn-tele { background: #0088cc; color: #fff; padding: 12px 20px; border-radius: 8px; font-weight: bold; margin: 10px 0; display: inline-block; }
-    </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* ========== STYLE LOGIN/BLOCK ========== */
+    * { box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #fff;
+      font-family: sans-serif;
+      margin: 0;
+      overflow: hidden;
+    }
+    .hidden-el { display: none !important; }
+    .lock-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 20px;
+      background: radial-gradient(circle, #051911 0%, #000000 100%);
+      overflow-y: auto;
+      z-index: 9999;
+    }
+
+    @keyframes floatForm {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-4px); }
+    }
+    .floating-login-box {
+      animation: floatForm 3.5s ease-in-out infinite;
+      background: rgba(15, 23, 20, 0.8);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 2rem;
+      padding: 1.4rem 1.2rem;
+      max-width: 280px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(16, 185, 129, 0.25);
+      text-align: center;
+    }
+
+    @keyframes blockFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    .floating-block-box {
+      animation: blockFloat 3.8s ease-in-out infinite;
+      background: rgba(15, 23, 20, 0.8);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 2rem;
+      padding: 1.6rem 1.4rem;
+      max-width: 336px;
+      width: 100%;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 22px rgba(239, 68, 68, 0.3);
+      text-align: center;
+      color: #fff;
+    }
+
+    @keyframes qrPulse {
+      0%, 100% { box-shadow: 0 0 10px #ef4444, 0 0 25px #dc2626, 0 0 40px #b91c1c; }
+      50% { box-shadow: 0 0 20px #f87171, 0 0 45px #ef4444, 0 0 65px #dc2626; }
+    }
+    .qr-img-block {
+      border-radius: 14px;
+      border: 3px solid #ef4444;
+      width: 200px;
+      height: auto;
+      margin: 10px auto;
+      display: block;
+      animation: qrPulse 2s ease-in-out infinite;
+    }
+
+    .input-box {
+      background: #111;
+      border: 1px solid #333;
+      padding: 10px 12px;
+      width: 100%;
+      margin-bottom: 8px;
+      border-radius: 10px;
+      color: #fff;
+      outline: none;
+      transition: 0.3s;
+      font-size: 0.8rem;
+    }
+    .input-box:focus {
+      border-color: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+    }
+    .btn-login {
+      background: #10b981;
+      color: #000;
+      padding: 10px;
+      width: 100%;
+      border-radius: 10px;
+      font-weight: bold;
+      transition: 0.3s;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+    }
+
+    @keyframes blinker {
+      50% { opacity: 0; }
+    }
+    .blink-text { animation: blinker 1s linear infinite; }
+
+    @keyframes neonPulse {
+      0%, 100% {
+        box-shadow: 0 0 6px #10b981, 0 0 14px #10b981, 0 0 24px #0d9488, 0 0 38px #0f766e;
+        border-color: #10b981;
+      }
+      25% {
+        box-shadow: 0 0 10px #34d399, 0 0 20px #34d399, 0 0 34px #10b981, 0 0 48px #0d9488;
+        border-color: #34d399;
+      }
+      50% {
+        box-shadow: 0 0 4px #0f766e, 0 0 10px #0f766e, 0 0 18px #0d9488, 0 0 28px #10b981;
+        border-color: #0f766e;
+      }
+      75% {
+        box-shadow: 0 0 12px #34d399, 0 0 22px #34d399, 0 0 38px #10b981, 0 0 50px #0d9488;
+        border-color: #34d399;
+      }
+    }
+    .logo-img {
+      width: 65px;
+      height: 65px;
+      object-fit: cover;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      border: 2px solid #10b981;
+      animation: neonPulse 2.8s ease-in-out infinite;
+    }
+
+    .warning-text-large {
+      font-size: 0.8rem;
+      line-height: 1.3rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .warning-box {
+      background: rgba(255, 0, 0, 0.1);
+      border: 1.5px solid #ff0000;
+      padding: 8px;
+      border-radius: 10px;
+      margin-top: 16px;
+      text-align: center;
+      font-size: 0.7rem;
+    }
+
+    .block-icon {
+      background: #dc2626;
+      padding: 0.4rem;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.8rem;
+    }
+    .block-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #ef4444;
+      animation: blinker 1s linear infinite;
+      margin-bottom: 0.3rem;
+    }
+    .block-reason {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #f9fafb;
+      margin: 0.4rem 0;
+      padding: 0 0.5rem;
+    }
+    .block-sub-text {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #10b981;
+      animation: blinker 1.4s linear infinite;
+      margin: 0.6rem 0 0.4rem;
+    }
+    .btn-tele {
+      background: #0088cc;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      margin: 8px 0;
+      display: inline-block;
+      text-decoration: none;
+      transition: 0.3s;
+      cursor: pointer;
+      border: none;
+      font-size: 0.75rem;
+    }
+    .btn-retry {
+      background: #1f2937;
+      color: #d1d5db;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 800;
+      margin: 8px 0;
+      display: inline-block;
+      cursor: pointer;
+      border: 2px solid #4b5563;
+      transition: 0.3s;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    }
+    .btn-retry:hover {
+      background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+      border-color: #10b981;
+      color: #fff;
+      box-shadow: 0 0 18px rgba(16, 185, 129, 0.5);
+      transform: scale(1.02);
+    }
+    .resit-text {
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      animation: blinker 1.5s linear infinite;
+      margin: 6px 0;
+      padding: 0 8px;
+    }
+
+    /* ========== STYLE PANEL M.O.D ========== */
+    .custom-scrollbar::-webkit-scrollbar { width: 2px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.5); border-radius: 99px; }
+
+    @keyframes logo-pulse { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.08); filter: brightness(1.3); } }
+    @keyframes rgb-text-full { 
+      0% { color: #ff0000; } 16% { color: #ff8800; } 33% { color: #ffff00; } 50% { color: #00ff00; } 66% { color: #0088ff; } 83% { color: #8800ff; } 100% { color: #ff0000; } 
+    }
+    .animate-logo-pulse { animation: logo-pulse 4s ease-in-out infinite; }
+    .animate-rgb-full-slow { animation: rgb-text-full 10s linear infinite; }
+    .neon-border-thin { 
+      border: 2px solid rgba(59, 130, 246, 0.8); 
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.7), inset 0 0 10px rgba(59, 130, 246, 0.5); 
+    }
+    .timer-bar { transition: width 1s linear; }
+    .shadow-glow { box-shadow: 0 0 15px rgba(234, 179, 8, 0.6); }
+
+    .grabmaps-trigger {
+      position: fixed;
+      bottom: 100px;
+      left: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #0f172a;
+      border: 2px solid #3b82f6;
+      box-shadow: 0 0 20px rgba(59,130,246,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 900;
+      color: white;
+      text-transform: uppercase;
+      line-height: 1.1;
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+
+    #main-content {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+    }
+    #main-content > * {
+      pointer-events: auto;
+    }
+  </style>
 </head>
 <body>
 
-<div id="security-layer" class="lock-screen">
-    <div id="login-form" class="w-full max-w-md text-center">
-        <img src="https://i.ibb.co/60PtNmBD/download.jpg" class="logo-img">
-        <h1 class="text-3xl font-bold text-emerald-500 mb-2">ZM CREW SYSTEM</h1>
-        <p class="text-gray-400 mb-6 text-sm">Sila masukkan akses anda</p>
+  <!-- ======================== LAYER LOGIN ======================== -->
+  <div id="security-layer" class="lock-screen">
+    <!-- KOTAK LOGIN -->
+    <div id="login-form" class="floating-login-box">
+      <img src="https://i.ibb.co/60PtNmBD/download.jpg" class="logo-img" alt="ZoneMasta Logo">
+      <h1 class="text-xl font-bold text-emerald-400 mb-1">ZONE MASTA SYSTEM</h1>
+      <p class="text-gray-400 mb-4 text-xs">Sila masukkan akses anda</p>
 
-        <input id="user-input" placeholder="Username" class="input-box" autocomplete="off">
-        <input id="pass-input" type="password" placeholder="Password" class="input-box">
+      <input id="user-input" placeholder="Username" class="input-box" autocomplete="off">
+      <input id="pass-input" type="password" placeholder="Password" class="input-box">
 
-        <button id="login-btn" onclick="handleLogin()" class="btn-login shadow-lg shadow-emerald-500/20 uppercase">LOGIN SYSTEM</button>
-        <p id="error-msg" class="text-red-500 mt-3 text-sm font-medium h-5"></p>
-        
-        <div class="warning-box">
-            <p class="text-red-500 blink-text warning-text-large mb-2">⚠️ PERINGATAN KERAS:</p>
-            <p class="text-white text-sm font-bold leading-tight">GUNAKAN FUNGSI MOD MENGIKUT KEPERLUAN. SEGALA RISIKO ADALAH TANGGUNGJAWAB SENDIRI!</p>
-        </div>
+      <button id="login-btn" onclick="handleLogin()" class="btn-login">LOGIN SYSTEM</button>
+      <p id="error-msg" class="text-red-500 mt-2 text-xs font-medium h-4"></p>
+
+      <div class="warning-box">
+        <p class="text-red-500 blink-text warning-text-large mb-1">⚠️ PERINGATAN KERAS:</p>
+        <p class="text-white text-xs font-bold leading-tight">GUNAKAN FUNGSI MOD MENGIKUT KEPERLUAN. SEGALA RISIKO ADALAH TANGGUNGJAWAB SENDIRI!</p>
+      </div>
     </div>
 
-    <div id="blocked-msg" class="hidden-el qr-container">
-        <div class="bg-red-600 p-2 rounded-full mb-4">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-        </div>
-        <h2 class="text-red-500 text-2xl font-bold uppercase blink-text">Akses Disekat</h2>
-        <p id="block-reason" class="text-white text-sm font-bold my-2 px-6"></p>
-        <p class="text-emerald-400 text-xs font-bold mt-4 blink-text">SILA KE ADMIN JIKA INGIN BERLANGGANAN / MEMPERBAHARUI SERVIS</p>
-        <a href="https://t.me/zmcrew" class="btn-tele text-sm shadow-lg shadow-blue-500/20">HUBUNGI TELEGRAM ADMIN</a>
-        <img src="https://i.ibb.co/cXRFyvyw/67312.jpg" class="qr-img shadow-xl shadow-white/5">
-        <p class="text-white text-xs font-bold uppercase tracking-widest blink-text">HANTAR RESIT KEPADA ADMIN SELEPAS PEMBAYARAN</p>
-        <button onclick="location.reload()" class="mt-6 text-gray-500 underline text-[10px]">Cuba Log Masuk Semula</button>
+    <!-- KOTAK SEKATAN -->
+    <div id="blocked-msg" class="hidden-el floating-block-box">
+      <div class="block-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      </div>
+      <h2 class="block-title">Akses Disekat</h2>
+      <p id="block-reason" class="block-reason"></p>
+      <p class="block-sub-text">SILA KE ADMIN JIKA INGIN BERLANGGANAN / MEMPERBAHARUI SERVIS</p>
+      <a href="https://t.me/zmcrew" class="btn-tele">HUBUNGI TELEGRAM ADMIN</a>
+      <button onclick="location.reload()" class="btn-retry">⚡ LOG MASUK SEMULA</button>
+      <p class="resit-text">📎 HANTAR RESIT KEPADA ADMIN SELEPAS PEMBAYARAN</p>
+      <img src="https://i.ibb.co/cXRFyvyw/67312.jpg" class="qr-img-block" alt="QR Pembayaran">
     </div>
-</div>
+  </div>
 
-<div id="main-content" class="hidden-el lock-screen">
-    <div class="flex flex-col items-center">
-        <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-emerald-500 font-bold tracking-widest text-lg blink-text">MEMBINA SESI SELAMAT...</p>
-        <div id="manual-trigger" class="mt-8 hidden-el text-center">
-            <a href="zmc://login_success" style="background:#10b981; color:#000; padding:15px 30px; border-radius:10px; font-weight:bold; text-decoration:none; display:inline-block; border: 2px solid #fff;">[ KLIK SINI UNTUK MASUK APLIKASI ]</a>
-        </div>
-    </div>
-</div>
+  <!-- ======================== WRAPPER PANEL M.O.D ======================== -->
+  <div id="main-content" class="hidden-el"></div>
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCrSMWPiFLhP8SzWMvZG0WcuwbIkLKjrws",
-  authDomain: "zonemasta-panel.firebaseapp.com",
-  projectId: "zonemasta-panel",
-  storageBucket: "zonemasta-panel.firebasestorage.app",
-  messagingSenderId: "82335500997",
-  appId: "1:82335500997:web:c9a98eba582fee3092feac"
-};
+  <!-- ======================== SKRIP LOGIN ======================== -->
+  <script>
+    /****************************************************
+     *  EFEK BUNYI (Web Audio API)
+     ****************************************************/
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
 
-if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-const db = firebase.firestore();
-
-function getAndroidDeviceId() {
-    if (window.Android && window.Android.getDeviceId) {
-        return window.Android.getDeviceId();
+    function ensureAudioCtx() {
+      if (!audioCtx) { audioCtx = new AudioCtx(); }
+      if (audioCtx.state === 'suspended') { audioCtx.resume(); }
     }
-    return btoa(navigator.userAgent + screen.width).substring(0, 16);
-}
 
-async function handleLogin(){
-    const userField = document.getElementById('user-input');
-    const passField = document.getElementById('pass-input');
-    const loginBtn = document.getElementById('login-btn');
-    const error = document.getElementById('error-msg');
+    function playWelcomeSound() {
+      ensureAudioCtx();
+      const now = audioCtx.currentTime;
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(150, now);
+      osc1.frequency.linearRampToValueAtTime(60, now + 0.4);
+      gain1.gain.setValueAtTime(0.3, now);
+      gain1.gain.linearRampToValueAtTime(0, now + 0.5);
+      osc1.connect(gain1); gain1.connect(audioCtx.destination);
+      osc1.start(now); osc1.stop(now + 0.5);
 
-    const username = userField.value.trim().toLowerCase();
-    const password = passField.value.trim();
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(1200, now + 0.05);
+      osc2.frequency.linearRampToValueAtTime(1800, now + 0.25);
+      gain2.gain.setValueAtTime(0.15, now + 0.05);
+      gain2.gain.linearRampToValueAtTime(0, now + 0.4);
+      osc2.connect(gain2); gain2.connect(audioCtx.destination);
+      osc2.start(now + 0.05); osc2.stop(now + 0.4);
+    }
 
-    if(!username || !password) { 
-        error.innerText = "Sila isi semua ruangan!"; 
+    function playErrorSound() {
+      ensureAudioCtx();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+      osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.35);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+    }
+
+    function playSuccessSound() {
+      ensureAudioCtx();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+    }
+
+    function playBlockedSound() {
+      ensureAudioCtx();
+      const now = audioCtx.currentTime;
+      for (let i = 0; i < 3; i++) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(600, now + i * 0.15);
+        osc.frequency.setValueAtTime(300, now + i * 0.15 + 0.08);
+        gain.gain.setValueAtTime(0.25, now + i * 0.15);
+        gain.gain.linearRampToValueAtTime(0, now + i * 0.15 + 0.12);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now + i * 0.15); osc.stop(now + i * 0.15 + 0.15);
+      }
+    }
+
+    function playLoadingSound() {
+      ensureAudioCtx();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.linearRampToValueAtTime(1200, now + 1.2);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.linearRampToValueAtTime(0, now + 1.5);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(now + 1.6);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => { playWelcomeSound(); }, 300);
+    });
+
+    // ========== FIREBASE ==========
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrSMWPiFLhP8SzWMvZG0WcuwbIkLKjrws",
+      authDomain: "zonemasta-panel.firebaseapp.com",
+      projectId: "zonemasta-panel",
+      storageBucket: "zonemasta-panel.firebasestorage.app",
+      messagingSenderId: "82335500997",
+      appId: "1:82335500997:web:c9a98eba582fee3092feac"
+    };
+
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    const db = firebase.firestore();
+
+    try { db.settings({ cacheSizeBytes: 0 }); } catch(e) {}
+
+    function getAndroidDeviceId() {
+      if (window.ZMNative && window.ZMNative.getDeviceId) {
+        return window.ZMNative.getDeviceId();
+      }
+      return btoa(navigator.userAgent + screen.width).substring(0, 16);
+    }
+
+    // ★★★ DIPANGGIL DARI AIDE/ANDROID BILA PERLU TUNJUK LOGIN SEMULA ★★★
+    window.ZMShowLogin = function() {
+      document.getElementById("security-layer").classList.remove("hidden-el");
+      document.getElementById("main-content").classList.add("hidden-el");
+      document.getElementById("login-form").classList.remove("hidden-el");
+      document.getElementById("blocked-msg").classList.add("hidden-el");
+      document.body.style.overflow = 'hidden';
+    };
+
+    // ★★★ DIPANGGIL DARI AIDE/ANDROID BILA AKSES EXPIRED ★★★
+    window.ZMForceLogout = function(reason) {
+      showBlock(reason || "Akses telah tamat tempoh.");
+      // Bagitau native untuk kembali ke lock screen
+      if (window.ZMNative && window.ZMNative.onAccessRevoked) {
+        window.ZMNative.onAccessRevoked(reason);
+      }
+    };
+
+    async function handleLogin(){
+      const userField = document.getElementById('user-input');
+      const passField = document.getElementById('pass-input');
+      const loginBtn = document.getElementById('login-btn');
+      const error = document.getElementById('error-msg');
+
+      const username = userField.value.trim().toLowerCase();
+      const password = passField.value.trim();
+
+      if(!username || !password) { 
+        error.innerText = "Sila isi semua ruangan!";
+        playErrorSound(); 
         return; 
-    }
+      }
 
-    loginBtn.disabled = true;
-    loginBtn.innerText = "MENYEMAK...";
+      loginBtn.disabled = true;
+      loginBtn.innerText = "MENYEMAK...";
+      playLoadingSound();
 
-    try {
-        const snapshot = await db.collection("users").where("username", "==", username).get();
+      try {
+        const snapshot = await db.collection("users")
+          .where("username", "==", username)
+          .get({ source: "server" });
 
         if(snapshot.empty){
-            showBlock("Akses akaun anda tidak ditemui atau belum didaftarkan.");
-            return;
+          showBlock("Akses akaun anda tidak ditemui atau belum didaftarkan.");
+          playBlockedSound();
+          return;
         }
 
         const userDoc = snapshot.docs[0];
-        const userData = userDoc.data();
+        const freshDoc = await userDoc.ref.get({ source: "server" });
+        if (!freshDoc.exists) {
+          showBlock("Akses akaun telah dipadamkan.");
+          playBlockedSound();
+          return;
+        }
+
+        const userData = freshDoc.data();
         const currentDeviceId = getAndroidDeviceId();
 
         if(userData.password !== password){
-            error.innerText = "Password salah!";
-            loginBtn.disabled = false;
-            loginBtn.innerText = "LOGIN SYSTEM";
-            return;
+          error.innerText = "Password salah!";
+          loginBtn.disabled = false;
+          loginBtn.innerText = "LOGIN SYSTEM";
+          playErrorSound();
+          return;
         }
 
-        const bannedStatus = ["disekat", "REVOKED", "BANNED"];
-        if(bannedStatus.includes(userData.status)){
-            showBlock("Akses akaun anda telah disekat sementara waktu.");
-            return;
+        const status = (userData.status || "").toString().toLowerCase().trim();
+        if(["disekat", "revoked", "banned"].includes(status)){
+          showBlock("Akses akaun anda telah disekat sementara waktu.");
+          playBlockedSound();
+          return;
         }
 
         if(userData.expiryDate){
-            if(new Date() > new Date(userData.expiryDate)){
-                showBlock("Akses akaun anda telah tamat tempoh (Expired).");
-                return;
-            }
+          const expiry = new Date(userData.expiryDate);
+          if(isNaN(expiry.getTime()) || new Date() > expiry){
+            showBlock("Akses akaun anda telah tamat tempoh (Expired).");
+            playBlockedSound();
+            return;
+          }
+        } else {
+          showBlock("Akaun tidak mempunyai tempoh sah. Sila hubungi admin.");
+          playBlockedSound();
+          return;
         }
 
         if(!userData.deviceId || userData.deviceId === ""){
-            await db.collection("users").doc(userDoc.id).update({ deviceId: currentDeviceId });
-        } 
-        else if(userData.deviceId !== currentDeviceId){
-            showBlock("Akses disekat kerana penggunaan ID peranti yang berbeza.");
-            return;
+          await db.collection("users").doc(userDoc.id).update({ deviceId: currentDeviceId });
+        } else if(userData.deviceId !== currentDeviceId){
+          showBlock("Akses disekat kerana penggunaan ID peranti yang berbeza.");
+          playBlockedSound();
+          return;
         }
 
-        showApp();
+        // Semua lulus
+        playSuccessSound();
+        showApp(userData);
 
-    } catch(e) {
+      } catch(e) {
         error.innerText = "Ralat: " + e.message;
         loginBtn.disabled = false;
         loginBtn.innerText = "LOGIN SYSTEM";
+        playErrorSound();
+      }
     }
-}
 
-function showBlock(msg){
-    document.getElementById("login-form").classList.add("hidden-el");
-    document.getElementById("blocked-msg").classList.remove("hidden-el");
-    document.getElementById("block-reason").innerText = msg;
-}
+    function showBlock(msg){
+      document.getElementById("login-form").classList.add("hidden-el");
+      document.getElementById("blocked-msg").classList.remove("hidden-el");
+      document.getElementById("block-reason").innerText = msg;
+      document.body.style.overflow = 'auto'; 
+    }
 
-function showApp(){
-    document.getElementById("security-layer").classList.add("hidden-el");
-    document.getElementById("main-content").classList.remove("hidden-el");
-    setTimeout(() => { document.getElementById("manual-trigger").classList.remove("hidden-el"); }, 1500);
-    setTimeout(() => { window.location.href = "zmc://login_success"; }, 2000);
-}
+    // ★★★ DIBETULKAN: JANGAN BUKA GRAB DRIVER, TERUS KE INTERFACE BIASA ★★★
+    function showApp(userData){
+      document.getElementById("security-layer").classList.add("hidden-el");
+      document.getElementById("main-content").classList.remove("hidden-el");
+      document.body.style.overflow = 'auto';
+      
+      // Simpan data user untuk kegunaan panel
+      window.ZMUserData = userData;
+      
+      // Bagitau native (AIDE) yang login berjaya
+      if (window.ZMNative && window.ZMNative.onLoginSuccess) {
+        window.ZMNative.onLoginSuccess(JSON.stringify(userData));
+      }
 
-document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
-</script>
+      // ★★★ PANGGIL CHECK EXPIRY DARI NATIVE SETIAP 60 SAAT ★★★
+      startExpiryChecker(userData);
+    }
 
-<script>
-function dummyFix() {
-    return;
-}
-</script>
+    function startExpiryChecker(userData) {
+      // Clear previous checker
+      if (window._zmExpiryInterval) clearInterval(window._zmExpiryInterval);
+      
+      window._zmExpiryInterval = setInterval(async () => {
+        try {
+          const now = new Date();
+          if (userData.expiryDate) {
+            const expiry = new Date(userData.expiryDate);
+            if (now > expiry) {
+              clearInterval(window._zmExpiryInterval);
+              window.ZMForceLogout("Akses telah tamat tempoh (Expired).");
+              playBlockedSound();
+            }
+          }
+        } catch(e) {}
+      }, 60000); // Semak setiap 60 saat
+    }
+
+    document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+  </script>
+
+  <!-- ======================== SKRIP PANEL M.O.D ======================== -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const App = () => {
+      const Icon = ({ name, size = 18, className = "" }) => {
+        const ref = useRef(null);
+        useEffect(() => {
+          if (ref.current) {
+            ref.current.innerHTML = "";
+            const i = document.createElement("i");
+            i.setAttribute("data-lucide", name);
+            i.style.width = size + "px";
+            i.style.height = size + "px";
+            if (className) i.className = className;
+            ref.current.appendChild(i);
+            lucide.createIcons({ elements: [i] });
+          }
+        }, [name, size, className]);
+        return <span ref={ref} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }} />;
+      };
+
+      const useLocalStorage = (key, initialValue) => {
+        const [storedValue, setStoredValue] = useState(() => {
+          try {
+            const item = window.localStorage.getItem(key);
+            return item ? JSON.parse(item) : initialValue;
+          } catch (e) { return initialValue; }
+        });
+        const setValue = (value) => {
+          try {
+            const valueToStore = value instanceof Function ? value(storedValue) : value;
+            setStoredValue(valueToStore);
+            window.localStorage.setItem(key, JSON.stringify(valueToStore));
+          } catch (e) { console.error(e); }
+        };
+        return [storedValue, setValue];
+      };
+
+      // ★★★ DEFAULT FALSE - mula dgn butang kecil sahaja ★★★
+      const [showPanel, setShowPanel] = useState(false);
+      const [activeTab, setActiveTab] = useState("home");
+      const [panelBg, setPanelBg] = useLocalStorage("panelBg", null);
+      const fileInputRef = useRef(null);
+
+      const [showJobPopup, setShowJobPopup] = useState(false);
+      const [currentJob, setCurrentJob] = useState(null);
+      const [popupTimer, setPopupTimer] = useState(15);
+      const timerRef = useRef(null);
+      const safetyDelayRef = useRef(null);
+
+      const [toggles, setToggles] = useLocalStorage("toggles", {
+        ultimate: true,
+        priorityWomen: false,
+        showIncoming: true,
+        enhancedSecurity: false
+      });
+
+      const [payments, setPayments] = useLocalStorage("payments", {
+        grabPay: false,
+        tunai: false,
+      });
+
+      const [paySettings, setPaySettings] = useLocalStorage("paySettings", {
+        grabPayLimit: 0, grabPayTimeLimit: 0,
+        tunaiLimit: 0, tunaiTimeLimit: 0,
+      });
+
+      const [expandSettings, setExpandSettings] = useState({
+        payment: false, grabPay: false, tunai: false,
+        price: false, premium: false, extra: false
+      });
+
+      const [currentStats, setCurrentStats] = useLocalStorage("currentStats", {
+        grabPayCount: 0, grabPayMinutes: 0,
+        tunaiCount: 0, tunaiMinutes: 0
+      });
+
+      const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+      const [price, setPrice] = useLocalStorage("priceMin", 15.00);
+      const [currentTime, setCurrentTime] = useState(new Date());
+      const [rank, setRank] = useState("member");
+      const [mockActive, setMockActive] = useState(true);
+      const [lastLocation] = useState({ lat: 5.9788, lng: 116.0753 });
+      const [locationLocked, setLocationLocked] = useState(false);
+
+      const showToast = (msg, type = "info") => {
+        setToast({ show: true, message: msg, type: type });
+        setTimeout(() => setToast({ show: false, message: "", type: "info" }), 3000);
+      };
+
+      // ★★★ BAGITAU NATIVE BILA MOD AKTIF ★★★
+      useEffect(() => {
+        if (payments.grabPay || payments.tunai) {
+          setLocationLocked(true);
+          if (window.ZMNative && window.ZMNative.onModActive) {
+            window.ZMNative.onModActive(JSON.stringify({
+              mode: payments.grabPay ? "grabpay" : "tunai",
+              toggles: toggles,
+              priceMin: price
+            }));
+          }
+        } else {
+          setLocationLocked(false);
+          if (window.ZMNative && window.ZMNative.onModInactive) {
+            window.ZMNative.onModInactive();
+          }
+        }
+      }, [payments]);
+
+      useEffect(() => {
+        const timer = setInterval(() => {
+          setCurrentTime(new Date());
+          if (activeTab === "home") {
+            setCurrentStats(prev => ({
+              ...prev,
+              grabPayMinutes: payments.grabPay ? prev.grabPayMinutes + (1/60) : prev.grabPayMinutes,
+              tunaiMinutes: payments.tunai ? prev.tunaiMinutes + (1/60) : prev.tunaiMinutes
+            }));
+          }
+        }, 1000);
+        return () => clearInterval(timer);
+      }, [payments, activeTab]);
+
+      useEffect(() => {
+        if (showJobPopup && popupTimer > 0) {
+          timerRef.current = setInterval(() => setPopupTimer(prev => prev - 1), 1000);
+        } else if (popupTimer === 0 && showJobPopup) {
+          handleJobDecision("AUTO");
+        }
+        return () => clearInterval(timerRef.current);
+      }, [showJobPopup, popupTimer]);
+
+      useEffect(() => { setRank(toggles.ultimate ? "ultimate" : "member"); }, [toggles.ultimate]);
+
+      const isGrabUnlimited = paySettings.grabPayLimit === 0 && paySettings.grabPayTimeLimit === 0;
+      const isTunaiUnlimited = paySettings.tunaiLimit === 0 && paySettings.tunaiTimeLimit === 0;
+
+      // ... semua useEffect lain sama ...
+
+      const handlePaymentToggle = (key) => {
+        setPayments(prev => {
+          const isActivating = !prev[key];
+          const newState = {
+            grabPay: key === "grabPay" ? isActivating : false,
+            tunai: key === "tunai" ? isActivating : false
+          };
+          return newState;
+        });
+        setCurrentStats({ grabPayCount: 0, grabPayMinutes: 0, tunaiCount: 0, tunaiMinutes: 0 });
+      };
+
+      const expandGrabPaySliders = () => {
+        setPaySettings(prev => ({...prev, grabPayLimit: 1, grabPayTimeLimit: 1}));
+        setExpandSettings(prev => ({...prev, grabPay: true}));
+      };
+
+      const expandTunaiSliders = () => {
+        setPaySettings(prev => ({...prev, tunaiLimit: 1, tunaiTimeLimit: 1}));
+        setExpandSettings(prev => ({...prev, tunai: true}));
+      };
+
+      const locations = [
+        { jemput: "Imago Shopping Mall, Kota Kinabalu", hantar: "KKIA Terminal 1, Sabah" },
+        { jemput: "iPeak, Lahad Datu Town", hantar: "Lahad Datu Airport (LDU)" },
+        { jemput: "Harbour Mall Sandakan, Bandar Ram-Ram", hantar: "Bandar Indah, Sandakan" },
+        { jemput: "Tawau Airport (TWU), Jalan Apas", hantar: "Bandar Tawau, Jalan Masjid" },
+        { jemput: "Suria Sabah Mall, Kota Kinabalu", hantar: "Lintas Square, Penampang" }
+      ];
+
+      const simulateIncomingJob = () => {
+        if (showJobPopup) return;
+        const isIncomingTunai = Math.random() > 0.5;
+        const jobPrice = (Math.random() * (45 - 8) + 8).toFixed(2);
+        const loc = locations[Math.floor(Math.random() * locations.length)];
+        const grabServices = ["GrabCar", "JustGrab", "GrabCar Premium"];
+        const isFemale = Math.random() > 0.5;
+        const distance = (Math.random() * (12 - 1) + 1).toFixed(2);
+
+        const newJob = {
+          type: grabServices[Math.floor(Math.random() * grabServices.length)],
+          pickup: loc.jemput,
+          dropoff: loc.hantar,
+          price: jobPrice,
+          isTunai: isIncomingTunai,
+          distance: distance,
+          isFemale: isFemale,
+        };
+
+        if (!toggles.showIncoming) {
+          setCurrentJob(newJob);
+          processJobDecision("AUTO");
+        } else {
+          setCurrentJob(newJob);
+          setPopupTimer(15);
+          setShowJobPopup(true);
+        }
+      };
+
+      const processJobDecision = (decisionType) => {
+        clearInterval(timerRef.current);
+        clearTimeout(safetyDelayRef.current);
+        const minPrice = parseFloat(price);
+
+        if (decisionType === "ACCEPT") {
+          showToast("Pesanan Diterima (Manual Bypass)", "success");
+          setShowJobPopup(false);
+          return;
+        }
+
+        if (toggles.enhancedSecurity) {
+          const delay = Math.floor(Math.random() * 3000) + 2000;
+          safetyDelayRef.current = setTimeout(() => {
+            executeDecision(decisionType, minPrice);
+          }, delay);
+          showToast("Keselamatan: Pemprosesan ditangguhkan...", "info");
+          return;
+        }
+
+        executeDecision(decisionType, minPrice);
+      };
+
+      const executeDecision = (decisionType, minPrice) => {
+        if (toggles.ultimate) {
+          showToast("Ultimate: Pesanan Diterima", "success");
+          setShowJobPopup(false);
+          return;
+        }
+
+        const jobMatchMod = (payments.grabPay && !currentJob.isTunai) || (payments.tunai && currentJob.isTunai);
+        const hargaCukup = parseFloat(currentJob.price) >= minPrice;
+        let wanitaKeutamaan = false;
+        if (toggles.priorityWomen && currentJob.isFemale) {
+          wanitaKeutamaan = true;
+        }
+
+        let tolak = false;
+        let sebab = "";
+
+        if (!jobMatchMod) {
+          tolak = true;
+          sebab = "Jenis job tidak sepadan mod";
+        } else if (!hargaCukup && !wanitaKeutamaan) {
+          tolak = true;
+          sebab = "Harga bawah minimum";
+        }
+
+        if (tolak && toggles.enhancedSecurity) {
+          const count = payments.grabPay ? currentStats.grabPayCount : currentStats.tunaiCount;
+          if (count > 0 && count % 3 === 0) {
+            tolak = false;
+            showToast("Keselamatan: Tolak dielakkan (pecah corak)", "info");
+          }
+        }
+
+        if (tolak) {
+          if (payments.grabPay) setCurrentStats(prev => ({ ...prev, grabPayCount: prev.grabPayCount + 1 }));
+          if (payments.tunai) setCurrentStats(prev => ({ ...prev, tunaiCount: prev.tunaiCount + 1 }));
+          showToast(`M.O.D: Tolak - ${sebab}`, "warning");
+        } else {
+          showToast(wanitaKeutamaan ? "Pax Wanita: Keutamaan diterima" : "M.O.D: Auto-Terima Dijalankan", "success");
+        }
+        setShowJobPopup(false);
+      };
+
+      const handleJobDecision = (decisionType) => { processJobDecision(decisionType); };
+
+      const getCountdown = () => {
+        let limit = 0, current = 0;
+        if (payments.grabPay) { limit = paySettings.grabPayTimeLimit; current = currentStats.grabPayMinutes; }
+        else if (payments.tunai) { limit = paySettings.tunaiTimeLimit; current = currentStats.tunaiMinutes; }
+        else return "--:--";
+        if (limit === 0) return "∞";
+        const remaining = Math.max(0, (limit * 60) - (current * 60));
+        return `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(Math.floor(remaining % 60)).padStart(2, "0")}`;
+      };
+
+      const formatFullDateOnly = (date) => date.toLocaleDateString("ms-MY", { weekday: "long", day: "2-digit", month: "short" }).replace(/,/g, "");
+      const formatTimeOnly = (date) => date.toLocaleTimeString("ms-MY", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+
+      const floatingBtnClass = "bg-white/10 backdrop-blur-md shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] border border-white/20 active:scale-95 transition-all duration-300";
+
+      const SliderUI = ({ label, value, current, max, step, unit, onChange, iconName, colorClass }) => (
+        <div className={`mt-1.5 p-2.5 rounded-xl ${floatingBtnClass}`}>
+          <div className="flex justify-between items-center mb-1">
+            <div className="flex items-center gap-1.5">
+              <Icon name={iconName} size={9} className="text-gray-400" />
+              <span className="text-[8px] font-bold text-gray-300 uppercase tracking-wider">{label}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {current !== undefined && <span className="text-[7px] font-bold text-white/40">{Math.floor(current)}/{value === 0 ? "∞" : (unit === "JOB" ? Math.floor(value) : value.toFixed(2))}</span>}
+              <span className={`text-[8px] font-black px-1 py-0.5 rounded-full border ${value === 0 ? "text-blue-400 border-blue-500/30 bg-blue-500/10" : colorClass.replace("accent", "text").replace("500", "400") + " border-current bg-current/10"}`}>
+                {value === 0 ? "UNLIMITED" : `${unit} ${unit === "JOB" ? Math.floor(value) : value.toFixed(2)}`}
+              </span>
+            </div>
+          </div>
+          <input type="range" min="0" max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))} className={`w-full h-0.5 bg-white/10 rounded-lg appearance-none cursor-pointer ${colorClass}`} />
+        </div>
+      );
+
+      // ★★★ JIKA showPanel FALSE → BUTANG KECIL SAHAJA ★★★
+      if (!showPanel) {
+        return (
+          <div className="grabmaps-trigger" onClick={() => setShowPanel(true)}>
+            GrabMaps
+          </div>
+        );
+      }
+
+      // ★★★ JIKA showPanel TRUE → POPUP PANEL TERAPUNG ★★★
+      return (
+        <div className="fixed inset-0 z-50 flex justify-center items-center p-2 bg-black/80 backdrop-blur-sm font-sans">
+          <input type="file" ref={fileInputRef} onChange={(e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onloadend = () => { setPanelBg(reader.result); showToast("Latar Panel Dikemaskini", "success"); };
+              reader.readAsDataURL(file);
+            }
+          }} accept="image/*" className="hidden" />
+
+          {toast.show && (
+            <div className="fixed top-12 z-[2000]">
+              <div className={`${toast.type === "error" ? "bg-red-500" : toast.type === "success" ? "bg-emerald-500" : "bg-blue-500"} text-black px-5 py-2 rounded-full shadow-2xl flex items-center gap-2 border border-white/20`}>
+                <Icon name="bell" size={14} />
+                <span className="text-[10px] font-black uppercase">{toast.message}</span>
+              </div>
+            </div>
+          )}
+
+          {/* POPUP JOB */}
+          {showJobPopup && currentJob && (
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+              <div className="w-full max-w-[350px] bg-[#161b22] rounded-[2.5rem] overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.9)] border border-white/10">
+                <div className="h-1.5 bg-white/5 w-full"><div className="h-full bg-emerald-500 timer-bar shadow-[0_0_10px_#10b981]" style={{ width: `${(popupTimer/15)*100}%` }}></div></div>
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h2 className="text-white text-3xl font-extrabold tracking-tighter uppercase italic">{currentJob.type}</h2>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <div className="px-2 py-0.5 bg-emerald-500/10 rounded border border-emerald-500/20 flex items-center gap-1"><Icon name="shield-check" size={7} className="text-emerald-400"/><span className="text-emerald-400 text-[7px] font-black uppercase">Stealth Protection</span></div>
+                        {currentJob.isTunai ? (
+                          <div className="px-2 py-0.5 bg-sky-500/10 rounded border border-sky-500/20 flex items-center gap-1"><Icon name="banknote" size={7} className="text-sky-400"/><span className="text-sky-400 text-[7px] font-black uppercase">Tunai</span></div>
+                        ) : (
+                          <div className="px-2 py-0.5 bg-emerald-500/10 rounded border border-emerald-500/20 flex items-center gap-1"><Icon name="wallet" size={7} className="text-emerald-400"/><span className="text-emerald-400 text-[7px] font-black uppercase">GrabPay</span></div>
+                        )}
+                        {currentJob.isFemale && (
+                          <div className="px-2 py-0.5 bg-pink-500/10 rounded border border-pink-500/20 flex items-center gap-1"><Icon name="user" size={7} className="text-pink-400"/><span className="text-pink-400 text-[7px] font-black uppercase">Wanita</span></div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10"><span className="text-white text-xl font-black font-mono">{popupTimer}</span></div>
+                  </div>
+                  <div className="bg-[#1b3d2b]/40 p-4 rounded-2xl border border-emerald-500/10 mb-3">
+                    <div className="flex justify-between mb-1"><span className="text-emerald-400 text-[8px] font-black uppercase">Lokasi Jemput</span><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"/></div>
+                    <p className="text-white text-sm font-bold line-clamp-2">{currentJob.pickup}</p>
+                  </div>
+                  <div className="bg-[#3d2b24]/40 p-4 rounded-2xl border border-amber-500/10 mb-6">
+                    <div className="flex justify-between mb-1"><span className="text-amber-500 text-[8px] font-black uppercase">Lokasi Hantar</span><span className="text-amber-500 text-[9px] font-black">{currentJob.distance}km</span></div>
+                    <p className="text-white text-sm font-bold line-clamp-2">{currentJob.dropoff}</p>
+                  </div>
+                  <div className="flex justify-between items-end mb-8 px-2">
+                    <div><span className="text-white/30 text-[9px] font-black uppercase">Pendapatan Bersih</span><div className="flex items-baseline gap-1 mt-1"><span className="text-emerald-400 text-lg font-black italic">RM</span><span className="text-emerald-400 text-5xl font-black tracking-tighter">{currentJob.price}</span></div></div>
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="px-2 py-1 bg-white/5 border border-white/10 rounded-lg flex items-center gap-1.5"><Icon name="zap" size={10} className="text-yellow-400"/><span className="text-white/60 text-[7px] font-black uppercase">Masked Mode</span></div>
+                      <span className="text-[7px] font-bold text-white/20 uppercase">© ZM Stealth v5.4</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button onClick={() => handleJobDecision("IGNORE")} className="py-4 bg-white/5 rounded-2xl text-white/30 text-[10px] font-black uppercase tracking-[0.3em] border border-white/5 active:scale-95">ABAIKAN</button>
+                    <button onClick={() => handleJobDecision("ACCEPT")} className={`py-4 rounded-2xl text-white text-[11px] font-black uppercase tracking-[0.3em] active:scale-95 shadow-lg border ${toggles.ultimate ? "bg-emerald-500 shadow-emerald-500/40 border-emerald-400/50 scale-105" : ((payments.grabPay && !currentJob.isTunai) || (payments.tunai && currentJob.isTunai)) && parseFloat(currentJob.price) >= price ? "bg-emerald-500 shadow-emerald-500/40 border-emerald-400/50 scale-105" : "bg-white/10 border-white/20"}`}>TERIMA</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* PANEL UTAMA */}
+          <div className={`w-full max-w-[390px] rounded-[3rem] shadow-[0_0_80px_rgba(59,130,246,0.5)] overflow-hidden border-2 border-blue-500/60 flex flex-col h-[95vh] relative`}
+            style={{ backgroundImage: panelBg ? `linear-gradient(to bottom, rgba(15,23,42,0.2), rgba(15,23,42,0.9)), url(${panelBg})` : 'none', backgroundColor: panelBg ? 'transparent' : '#0f172a', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+
+            {/* HEADER */}
+            <div className="shrink-0 bg-transparent backdrop-blur-[2px] border-b border-white/5 z-20">
+              <div className="pt-6 px-5 pb-3 flex items-start gap-5">
+                <div className="flex flex-col items-center gap-2 shrink-0">
+                  <div className="w-24 h-24 bg-white/10 rounded-[2.5rem] flex items-center justify-center overflow-hidden backdrop-blur-md animate-logo-pulse neon-border-thin">
+                    <img src="https://i.ibb.co/60PtNmBD/download.jpg" alt="Logo" className="w-full h-full object-cover" />
+                  </div>
+                  <span className="bg-yellow-500 text-black text-[11px] font-black px-4 py-1 rounded-full uppercase shadow-[0_0_30px_rgba(234,179,8,0.5)] tracking-widest flex items-center gap-1">
+                    <Icon name="crown" size={10} /> VIP
+                  </span>
+                  <span className={`text-[9px] font-black uppercase ${rank === "ultimate" ? "text-yellow-400" : "text-white/30"}`}>{rank}</span>
+                </div>
+                <div className="flex-1 overflow-hidden pt-1">
+                  <div className="flex flex-col mb-3">
+                    <h1 className="text-xl font-black text-white leading-none tracking-tighter mb-1">ZoneMasta M.O.D</h1>
+                    <p className="text-[7px] font-bold text-emerald-400 uppercase tracking-[0.12em] italic">© 2013 - 2026 Powerd By ZoneMasta Team ©</p>
+                  </div>
+                  <div className="flex flex-col items-start gap-2">
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl ${floatingBtnClass}`}>
+                      <Icon name="timer" size={14} className="text-amber-400" />
+                      <span className="text-[7px] font-bold text-white/60 uppercase tracking-[0.2em]">Baki Masa:</span>
+                      <span className="text-[14px] font-black text-amber-400 font-mono tracking-widest">{getCountdown()}</span>
+                    </div>
+                    <div className="flex items-center gap-3 px-1">
+                      <div className="flex items-center gap-1.5"><Icon name="calendar" size={14} className="text-amber-400"/><span className="text-[12px] font-black text-white uppercase">{formatFullDateOnly(currentTime)}</span></div>
+                      <div className="w-[1px] h-3 bg-white/30"></div>
+                      <div className="flex items-center gap-1.5"><Icon name="clock" size={14} className="text-blue-400"/><span className="text-[12px] font-black text-white uppercase font-mono">{formatTimeOnly(currentTime)}</span></div>
+                    </div>
+                    <div className="text-[8px] font-bold text-blue-400/70 uppercase flex items-center gap-1">
+                      <Icon name="map-pin" size={10} className="text-blue-400" />
+                      {mockActive ? "Mock GPS: Aktif" : "Lokasi Disamarkan"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* KANDUNGAN SCROLL */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar">
+              {activeTab === "home" ? (
+                <div className="space-y-5">
+
+                  {/* MOD PEMBAYARAN */}
+                  <div>
+                    <button onClick={() => setExpandSettings(p=>({...p, payment:!p.payment}))} className={`w-full py-3 rounded-2xl flex items-center justify-center relative ${floatingBtnClass} ${expandSettings.payment?"bg-white/20":""}`}>
+                      <Icon name="wallet" size={14} className="text-amber-400 mr-2" />
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-center animate-rgb-full-slow">Mod Pembayaran</h3>
+                      <div className="absolute right-4 text-white/40">{expandSettings.payment ? <Icon name="chevron-up" size={14}/> : <Icon name="chevron-down" size={14}/>}</div>
+                    </button>
+                    {expandSettings.payment && (
+                      <div className="mt-4 space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <button onClick={()=>handlePaymentToggle("grabPay")} className={`relative h-14 rounded-2xl flex flex-col items-center justify-center ${floatingBtnClass} ${payments.grabPay?"bg-emerald-500/20 border-emerald-500/50":""}`}>
+                            <Icon name="wallet" size={16} className={payments.grabPay?"text-emerald-400":"text-white/40"} />
+                            <span className="text-[12px] font-black mt-0.5 text-white">GrabPay</span>
+                            <div className={`absolute top-2 right-2 w-1.5 h-1.5 rounded-full ${payments.grabPay?"bg-emerald-500 shadow-[0_0_10px_#10b981]":"bg-red-500"}`}/>
+                          </button>
+                          <button onClick={()=>handlePaymentToggle("tunai")} className={`relative h-14 rounded-2xl flex flex-col items-center justify-center ${floatingBtnClass} ${payments.tunai?"bg-sky-500/20 border-sky-500/50":""}`}>
+                            <Icon name="banknote" size={16} className={payments.tunai?"text-sky-400":"text-white/40"} />
+                            <span className="text-[12px] font-black mt-0.5 text-white">Tunai</span>
+                            <div className={`absolute top-2 right-2 w-1.5 h-1.5 rounded-full ${payments.tunai?"bg-emerald-500 shadow-[0_0_10px_#10b981]":"bg-red-500"}`}/>
+                          </button>
+                        </div>
+
+                        {payments.grabPay && (isGrabUnlimited && !expandSettings.grabPay ? (
+                          <div className="mt-2">
+                            <button onClick={expandGrabPaySliders} className="w-full py-2 bg-white/5 border border-white/20 rounded-xl flex items-center justify-center gap-2 text-[9px] font-black text-blue-400/60 uppercase">
+                              <Icon name="settings" size={12}/> Had GrabPay <Icon name="chevron-down" size={10}/>
+                            </button>
+                          </div>
+                        ) : payments.grabPay && (
+                          <div className="mt-1">
+                            <SliderUI label="Had Tolak Job Tunai" value={paySettings.grabPayLimit} current={currentStats.grabPayCount} max={20} step={1} unit="JOB" onChange={v=>setPaySettings(p=>({...p,grabPayLimit:v}))} iconName="alert-circle" colorClass="accent-yellow-500"/>
+                            <SliderUI label="Had Minit Aktif GrabPay" value={paySettings.grabPayTimeLimit} current={currentStats.grabPayMinutes} max={60} step={1} unit="MIN" onChange={v=>setPaySettings(p=>({...p,grabPayTimeLimit:v}))} iconName="timer" colorClass="accent-blue-500"/>
+                          </div>
+                        ))}
+
+                        {payments.tunai && (isTunaiUnlimited && !expandSettings.tunai ? (
+                          <div className="mt-2">
+                            <button onClick={expandTunaiSliders} className="w-full py-2 bg-white/5 border border-white/20 rounded-xl flex items-center justify-center gap-2 text-[9px] font-black text-sky-400/60 uppercase">
+                              <Icon name="settings" size={12}/> Had Tunai <Icon name="chevron-down" size={10}/>
+                            </button>
+                          </div>
+                        ) : payments.tunai && (
+                          <div className="mt-1">
+                            <SliderUI label="Had Tolak Job GrabPay" value={paySettings.tunaiLimit} current={currentStats.tunaiCount} max={20} step={1} unit="JOB" onChange={v=>setPaySettings(p=>({...p,tunaiLimit:v}))} iconName="alert-circle" colorClass="accent-sky-500"/>
+                            <SliderUI label="Had Minit Aktif Tunai" value={paySettings.tunaiTimeLimit} current={currentStats.tunaiMinutes} max={60} step={1} unit="MIN" onChange={v=>setPaySettings(p=>({...p,tunaiTimeLimit:v}))} iconName="timer" colorClass="accent-sky-500"/>
+                          </div>
+                        ))}
+
+                        <div className="pt-2 border-t border-white/5">
+                          <SliderUI label="Sekatan Harga Minimum" value={price} max={100} step={0.5} unit="RM" onChange={setPrice} iconName="dollar-sign" colorClass="accent-emerald-500"/>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* PREMIUM */}
+                  <div>
+                    <button onClick={()=>setExpandSettings(p=>({...p,premium:!p.premium}))} className={`w-full py-3 rounded-2xl flex items-center justify-center relative ${floatingBtnClass}`}>
+                      <Icon name="crown" size={14} className="text-yellow-400 mr-2" />
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-center animate-rgb-full-slow">Ciri Premium VIP</h3>
+                      <div className="absolute right-4 text-white/40">{expandSettings.premium ? <Icon name="chevron-up" size={14}/> : <Icon name="chevron-down" size={14}/>}</div>
+                    </button>
+                    {expandSettings.premium && (
+                      <div className="grid grid-cols-2 gap-3 mt-4">
+                        <button onClick={()=>setToggles(p=>({...p,ultimate:!p.ultimate}))} className={`relative h-11 rounded-xl flex flex-col items-center justify-center ${floatingBtnClass} ${toggles.ultimate?"bg-yellow-500/10 border-yellow-500/50":""}`}>
+                          <Icon name="crown" size={14} className={toggles.ultimate?"text-yellow-400 shadow-glow":"text-white/20"}/>
+                          <span className="text-[9px] font-black text-white mt-0.5 uppercase">Ultimate</span>
+                          <div className={`absolute top-1.5 right-1.5 w-1 h-1 rounded-full ${toggles.ultimate?"bg-emerald-500":"bg-red-500"}`}/>
+                        </button>
+                        <button onClick={()=>setToggles(p=>({...p,priorityWomen:!p.priorityWomen}))} className={`relative h-11 rounded-xl flex flex-col items-center justify-center ${floatingBtnClass} ${toggles.priorityWomen?"bg-rose-500/10 border-rose-500/50":""}`}>
+                          <Icon name="user" size={14} className={toggles.priorityWomen?"text-rose-400":"text-white/20"}/>
+                          <span className="text-[9px] font-black text-white mt-0.5 uppercase">Pax Wanita</span>
+                          <div className={`absolute top-1.5 right-1.5 w-1 h-1 rounded-full ${toggles.priorityWomen?"bg-emerald-500":"bg-red-500"}`}/>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* TAMBAHAN */}
+                  <div>
+                    <button onClick={()=>setExpandSettings(p=>({...p,extra:!p.extra}))} className={`w-full py-3 rounded-2xl flex items-center justify-center relative ${floatingBtnClass}`}>
+                      <Icon name="layers" size={14} className="text-blue-400 mr-2" />
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-center animate-rgb-full-slow">Fungsi Tambahan</h3>
+                      <div className="absolute right-4 text-white/40">{expandSettings.extra ? <Icon name="chevron-up" size={14}/> : <Icon name="chevron-down" size={14}/>}</div>
+                    </button>
+                    {expandSettings.extra && (
+                      <div className="mt-4 space-y-2.5">
+                        <button onClick={()=>setToggles(p=>({...p,showIncoming:!p.showIncoming}))} className={`w-full h-10 rounded-xl flex items-center px-4 gap-3 ${floatingBtnClass} ${toggles.showIncoming?"bg-blue-500/10 border-blue-500/50":""}`}>
+                          <Icon name="layout-list" size={14} className={toggles.showIncoming?"text-blue-400":"text-white/20"}/>
+                          <span className="text-[9px] font-black text-white uppercase flex-1 text-left">Paparan Tempahan Masuk</span>
+                          <div className={`w-1.5 h-1.5 rounded-full ${toggles.showIncoming?"bg-blue-400":"bg-white/10"}`}/>
+                        </button>
+                        <button onClick={()=>setToggles(p=>({...p,enhancedSecurity:!p.enhancedSecurity}))} className={`w-full h-10 rounded-xl flex items-center px-4 gap-3 ${floatingBtnClass} ${toggles.enhancedSecurity?"bg-orange-500/10 border-orange-500/50":""}`}>
+                          <Icon name="shield-alert" size={14} className={toggles.enhancedSecurity?"text-orange-400":"text-white/20"}/>
+                          <span className="text-[9px] font-black text-white uppercase flex-1 text-left">Keselamatan Ditingkatkan</span>
+                          <div className={`w-1.5 h-1.5 rounded-full ${toggles.enhancedSecurity?"bg-orange-400":"bg-white/10"}`}/>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* UJI SIMULASI */}
+                  <button onClick={simulateIncomingJob} className="w-full py-3 bg-emerald-500/90 border border-emerald-400 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.7)] active:scale-95">
+                    <Icon name="navigation" size={14} className="text-white"/> Uji Simulasi Job
+                  </button>
+                </div>
+              ) : (
+                <div className="h-full flex flex-col space-y-4">
+                  <div className={`flex-1 rounded-[2.5rem] relative overflow-hidden ${floatingBtnClass} p-1`}>
+                    <div className="absolute inset-0 bg-slate-950/60 flex flex-col items-center justify-center">
+                      <div className="w-64 h-64 border border-blue-500/20 rounded-full relative">
+                        <div className="w-4 h-4 bg-blue-500 rounded-full shadow-[0_0_20px_#3b82f6] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse z-10"/>
+                      </div>
+                      <h2 className="mt-4 text-sm font-black text-white uppercase"><Icon name="crosshair" size={14} className="inline text-emerald-400 mr-1"/>Zone Tracker Aktif</h2>
+                    </div>
+                    <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center bg-black/40 backdrop-blur-md p-3 rounded-2xl border border-white/10">
+                      <div><span className="text-[7px] font-bold text-white/40 uppercase">Lokasi Semasa</span><span className="text-[9px] font-black text-white">Lahad Datu, Sabah</span></div>
+                      <div className="text-right"><span className="text-[7px] font-bold text-white/40 uppercase">Zon Sibuk</span><span className="text-[9px] font-black text-emerald-400">HIGH DEMAND</span></div>
+                    </div>
+                  </div>
+                  <button onClick={()=>setActiveTab("home")} className={`w-full py-3 rounded-2xl flex items-center justify-center gap-2 ${floatingBtnClass} text-white font-black text-[10px] uppercase`}><Icon name="home" size={14} className="text-blue-400"/> Balik ke Dashboard</button>
+                </div>
+              )}
+
+              {/* NAVIGASI BAWAH */}
+              <div className="grid grid-cols-4 gap-3 pt-5 border-t border-white/10">
+                {[
+                  { label: "Analisa", icon: "activity", color: "text-blue-400", tab: "home" },
+                  { label: "Peta", icon: "map", color: "text-emerald-400", tab: "map" },
+                  { label: "Reload", icon: "refresh-cw", color: "text-orange-400", tab: "reload" },
+                  { label: "Keluar", icon: "log-out", color: "text-red-500", tab: "exit" },
+                ].map((item, idx) => (
+                  <div key={idx} className={`flex flex-col items-center gap-2 cursor-pointer transition-all ${activeTab===item.tab?"scale-110":""}`} onClick={()=>{
+                    if(item.tab==="reload") window.location.reload();
+                    else if(item.tab==="exit") { 
+                      setShowPanel(false); 
+                      showToast("Panel Ditutup - Mod Kekal Aktif", "info");
+                      // ★★★ BAGITAU NATIVE PANEL DITUTUP ★★★
+                      if (window.ZMNative && window.ZMNative.onPanelClosed) {
+                        window.ZMNative.onPanelClosed();
+                      }
+                    }
+                    else setActiveTab(item.tab);
+                  }}>
+                    <div className={`w-12 h-12 flex items-center justify-center rounded-2xl ${floatingBtnClass} ${activeTab===item.tab?"bg-white/20 border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.3)]":""}`}>
+                      <Icon name={item.icon} size={18} className={item.color}/>
+                    </div>
+                    <span className={`text-[8px] font-bold uppercase ${activeTab===item.tab?"text-white":"text-white/40"}`}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {activeTab==="home" && (
+                <div className="pt-6 pb-3 flex flex-col items-center gap-3">
+                  <button onClick={()=>fileInputRef.current.click()} className={`w-1/2 py-3 rounded-[1.5rem] flex items-center justify-center gap-2 shadow-[0_15px_40px_rgba(0,0,0,0.4)] ${floatingBtnClass} border-blue-500/30 hover:bg-white/20`}>
+                    <Icon name="image" size={14} className="text-blue-400"/><span className="text-[10px] font-black text-white uppercase">Tukar Latar</span>
+                  </button>
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-[9px] font-black text-white/10 tracking-[0.4em] uppercase">ZoneMasta Team VIP</p>
+                    <div className="bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-400/40 opacity-80 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+                      <p className="text-[7px] font-bold text-emerald-400 uppercase tracking-[0.2em]">𝗦𝗲𝘀𝗶 𝗣𝗮𝗻𝗲𝗹 𝗔𝗸𝘁𝗶𝗳</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setMockActive(!mockActive)} className="text-[7px] text-blue-400/50 underline mt-1">
+                    Toggle Mock GPS (Ujian)
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById("main-content")).render(<App />);
+  </script>
+
 </body>
 </html>
